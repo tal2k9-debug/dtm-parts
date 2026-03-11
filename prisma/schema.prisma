@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String         @id @default(cuid())
+  username        String         @unique
+  passwordHash    String
+  name            String
+  phone           String
+  email           String?
+  businessName    String?
+  businessAddress String?
+  businessId      String?
+  businessType    String?
+  role            Role           @default(CUSTOMER)
+  notes           String?
+  createdAt       DateTime       @default(now())
+  lastLogin       DateTime?
+  requests        QuoteRequest[]
+  messages        Message[]
+}
+
+enum Role {
+  CUSTOMER
+  VIP
+  ADMIN
+}
+
+model QuoteRequest {
+  id          String    @id @default(cuid())
+  userId      String?
+  user        User?     @relation(fields: [userId], references: [id])
+  guestName   String?
+  guestPhone  String?
+  carMake     String
+  carModel    String
+  carYear     String
+  position    Position
+  notes       String?
+  imageUrl    String?
+  status      Status    @default(PENDING)
+  quotedPrice Float?
+  createdAt   DateTime  @default(now())
+  closedAt    DateTime?
+  messages    Message[]
+}
+
+enum Position {
+  FRONT
+  REAR
+}
+
+enum Status {
+  PENDING
+  QUOTED
+  CLOSED
+  CANCELLED
+}
+
+model Message {
+  id         String       @id @default(cuid())
+  requestId  String
+  request    QuoteRequest @relation(fields: [requestId], references: [id])
+  userId     String?
+  user       User?        @relation(fields: [userId], references: [id])
+  senderRole String
+  content    String?
+  imageUrl   String?
+  readAt     DateTime?
+  createdAt  DateTime     @default(now())
+}
+
+model BumperCache {
+  id           String    @id @default(cuid())
+  mondayItemId String    @unique
+  name         String
+  carMake      String
+  carModel     String
+  carYear      String
+  position     Position?
+  price        Float?
+  status       String
+  imageUrl     String?
+  lastSynced   DateTime  @updatedAt
+}

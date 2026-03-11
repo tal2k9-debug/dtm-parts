@@ -1,0 +1,130 @@
+"use client";
+
+import { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { motion } from "framer-motion";
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
+import Input from "@/components/ui/Input";
+import Select from "@/components/ui/Select";
+import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
+import { CheckCircleIcon, PaperAirplaneIcon } from "@heroicons/react/24/outline";
+
+const MAKES = ["יונדאי", "קיה", "טויוטה", "מזדה", "ניסאן", "שברולט", "פולקסווגן", "סקודה", "הונדה", "פורד", "אחר"];
+const YEARS = Array.from({ length: 15 }, (_, i) => String(2024 - i));
+
+export default function QuoteContent() {
+  const searchParams = useSearchParams();
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const [form, setForm] = useState({
+    name: "",
+    phone: "",
+    carMake: searchParams.get("make") || "",
+    carModel: searchParams.get("model") || "",
+    carYear: searchParams.get("year") || "",
+    position: searchParams.get("position") || "",
+    notes: "",
+  });
+
+  const updateField = (field: string, value: string) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    setIsLoading(false);
+    setIsSubmitted(true);
+  };
+
+  if (isSubmitted) {
+    return (
+      <>
+        <Header />
+        <main className="pt-24 pb-16 min-h-screen bg-background flex items-center justify-center">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center max-w-md mx-auto px-4"
+          >
+            <div className="w-20 h-20 mx-auto mb-6 bg-success/10 rounded-full flex items-center justify-center">
+              <CheckCircleIcon className="w-12 h-12 text-success" />
+            </div>
+            <h2 className="text-2xl font-bold text-text mb-3">הבקשה נשלחה בהצלחה!</h2>
+            <p className="text-text-secondary mb-8">
+              קיבלנו את הבקשה שלכם ונחזור אליכם עם הצעת מחיר בהקדם.
+            </p>
+            <div className="flex flex-col gap-3">
+              <Button fullWidth variant="primary" onClick={() => (window.location.href = "/")}>
+                חזרה לדף הראשי
+              </Button>
+              <a href="https://wa.me/972XXXXXXXXX" target="_blank" rel="noopener noreferrer">
+                <Button fullWidth variant="whatsapp">דברו איתנו בוואטסאפ</Button>
+              </a>
+            </div>
+          </motion.div>
+        </main>
+        <Footer />
+      </>
+    );
+  }
+
+  return (
+    <>
+      <Header />
+      <main className="pt-24 pb-16 min-h-screen bg-background">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <div className="text-center mb-10">
+              <h1 className="text-3xl sm:text-4xl font-extrabold text-text mb-3">בקשת הצעת מחיר</h1>
+              <p className="text-text-secondary text-lg">מלאו את הפרטים ונחזור אליכם תוך דקות</p>
+            </div>
+
+            <Card padding="lg">
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-bold text-text mb-4">פרטים אישיים</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <Input label="שם מלא" placeholder="הזינו שם מלא" value={form.name} onChange={(e) => updateField("name", e.target.value)} required />
+                    <Input label="טלפון" placeholder="050-0000000" type="tel" value={form.phone} onChange={(e) => updateField("phone", e.target.value)} required />
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-text mb-4">פרטי הרכב</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <Select label="יצרן" placeholder="בחרו יצרן" value={form.carMake} onChange={(e) => updateField("carMake", e.target.value)} options={MAKES.map((m) => ({ value: m, label: m }))} required />
+                    <Input label="דגם" placeholder="לדוגמה: i20, קורולה..." value={form.carModel} onChange={(e) => updateField("carModel", e.target.value)} required />
+                    <Select label="שנה" placeholder="בחרו שנה" value={form.carYear} onChange={(e) => updateField("carYear", e.target.value)} options={YEARS.map((y) => ({ value: y, label: y }))} required />
+                    <Select label="מיקום הטמבון" placeholder="קדמי / אחורי" value={form.position} onChange={(e) => updateField("position", e.target.value)} options={[{ value: "FRONT", label: "קדמי" }, { value: "REAR", label: "אחורי" }]} required />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-text mb-1.5">הערות נוספות</label>
+                  <textarea
+                    className="w-full px-4 py-3 rounded-xl border border-border bg-surface text-text transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary placeholder:text-text-muted resize-none"
+                    rows={4}
+                    placeholder="פרטים נוספים, מספר רכב, תמונה של הפגוש הנדרש..."
+                    value={form.notes}
+                    onChange={(e) => updateField("notes", e.target.value)}
+                  />
+                </div>
+
+                <Button type="submit" fullWidth size="lg" isLoading={isLoading} icon={<PaperAirplaneIcon className="w-5 h-5 rotate-180" />}>
+                  שלחו בקשה
+                </Button>
+                <p className="text-xs text-text-muted text-center">בשליחת הטופס אתם מאשרים שנחזור אליכם בהקדם</p>
+              </form>
+            </Card>
+          </motion.div>
+        </div>
+      </main>
+      <Footer />
+    </>
+  );
+}
