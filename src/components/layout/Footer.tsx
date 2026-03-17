@@ -42,7 +42,7 @@ export default function Footer() {
               </div>
             </div>
             <p className="text-white/70 text-sm leading-relaxed">
-              מגוון רחב של טמבונים ופגושים חדשים לכל יצרני הרכב.
+              מגוון רחב של טמבונים ופגושים משומשים מייבוא לכל יצרני הרכב.
               מחירים תחרותיים, שירות אישי ומשלוח מהיר לכל הארץ.
             </p>
           </div>

@@ -3,6 +3,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { notifyAdmin } from "@/lib/whatsapp";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -81,6 +82,12 @@ export const authOptions: NextAuthOptions = {
                 businessType: "private",
               },
             });
+            // Send WhatsApp notification
+            try {
+              await notifyAdmin(`👤 לקוח חדש נרשם דרך Google!\nשם: ${user.name || "לא צוין"}\nאימייל: ${user.email || "לא צוין"}`);
+            } catch (e) {
+              console.error("WhatsApp notification failed:", e);
+            }
           } else {
             // Update lastLogin
             await prisma.user.update({
@@ -127,6 +134,7 @@ export const authOptions: NextAuthOptions = {
   },
   session: {
     strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   secret: process.env.NEXTAUTH_SECRET,
 };

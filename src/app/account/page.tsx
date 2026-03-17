@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -8,16 +8,44 @@ import Card from "@/components/ui/Card";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { ShoppingBagIcon, DocumentTextIcon, ChatBubbleLeftRightIcon, HeartIcon } from "@heroicons/react/24/outline";
+import { getRequestStatusLabel, getPositionLabel, formatDate } from "@/lib/utils";
+
+interface QuoteRequest {
+  id: string;
+  carMake: string;
+  carModel: string;
+  carYear: string;
+  position: string;
+  status: string;
+  createdAt: string;
+  quotedPrice?: number;
+}
 
 export default function AccountPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const [requests, setRequests] = useState<QuoteRequest[]>([]);
+  const [loadingRequests, setLoadingRequests] = useState(true);
 
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/login");
     }
   }, [status, router]);
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      fetch("/api/account/requests")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.requests) {
+            setRequests(data.requests);
+          }
+        })
+        .catch(console.error)
+        .finally(() => setLoadingRequests(false));
+    }
+  }, [status]);
 
   if (status === "loading") {
     return (
@@ -79,7 +107,29 @@ export default function AccountPage() {
               <h2 className="font-bold text-lg text-text">הבקשות שלי</h2>
               <Link href="/account/requests" className="text-sm text-primary hover:underline">הצג הכל</Link>
             </div>
-            <p className="text-text-secondary text-center py-8">אין בקשות עדיין</p>
+            {loadingRequests ? (
+              <p className="text-text-secondary text-center py-8">טוען...</p>
+            ) : requests.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-text-secondary mb-3">אין בקשות עדיין</p>
+                <Link href="/quote" className="text-primary font-medium hover:underline">שלח בקשת מחיר ראשונה</Link>
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-100">
+                {requests.slice(0, 5).map((req) => {
+                  const statusInfo = getRequestStatusLabel(req.status);
+                  return (
+                    <Link key={req.id} href={`/account/requests/${req.id}`} className="flex items-center justify-between py-3 hover:bg-gray-50 -mx-6 px-6 transition-colors">
+                      <div>
+                        <p className="font-medium text-text">{req.carMake} {req.carModel} {req.carYear}</p>
+                        <p className="text-sm text-text-secondary">{getPositionLabel(req.position)} &bull; {formatDate(new Date(req.createdAt))}</p>
+                      </div>
+                      <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${statusInfo.color}`}>{statusInfo.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
           </Card>
         </div>
       </main>

@@ -25,31 +25,50 @@ export default function AdminInventoryPage() {
   const [syncing, setSyncing] = useState(false);
   const [search, setSearch] = useState("");
   const [bumpers, setBumpers] = useState<Bumper[]>([]);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
-    fetchBumpers();
+    fetchBumpers(1, false);
   }, []);
 
-  const fetchBumpers = async () => {
+  const fetchBumpers = async (pageNum: number, append: boolean) => {
+    if (append) {
+      setLoadingMore(true);
+    }
     try {
-      const res = await fetch("/api/bumpers?limit=100");
+      const res = await fetch(`/api/bumpers?limit=100&page=${pageNum}`);
       const data = await res.json();
       if (data.bumpers) {
-        setBumpers(data.bumpers);
+        if (append) {
+          setBumpers((prev) => [...prev, ...data.bumpers]);
+        } else {
+          setBumpers(data.bumpers);
+        }
+        setTotal(data.pagination?.total ?? data.bumpers.length);
       }
     } catch (error) {
       console.error("Failed to fetch bumpers:", error);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
+  };
+
+  const handleLoadMore = () => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchBumpers(nextPage, true);
   };
 
   const handleSync = async () => {
     setSyncing(true);
     try {
       await fetch("/api/monday/sync");
-      await fetchBumpers();
+      setPage(1);
+      await fetchBumpers(1, false);
     } finally {
       setTimeout(() => setSyncing(false), 2000);
     }
@@ -63,7 +82,7 @@ export default function AdminInventoryPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div><h1 className="text-2xl font-bold text-gray-900">מלאי טמבונים</h1><p className="text-gray-500 mt-1">{loading ? "..." : `${filtered.length} פריטים`}</p></div>
+        <div><h1 className="text-2xl font-bold text-gray-900">מלאי טמבונים</h1><p className="text-gray-500 mt-1">{loading ? "..." : `${filtered.length} מתוך ${total} פריטים`}</p></div>
         <Button size="sm" variant="secondary" isLoading={syncing} onClick={handleSync} icon={<ArrowPathIcon className="w-4 h-4" />}>סנכרון ממנדיי</Button>
       </div>
       <Card>
@@ -108,6 +127,13 @@ export default function AdminInventoryPage() {
           </table>
         </div>
       </Card>
+      {bumpers.length < total && !search && (
+        <div className="text-center">
+          <Button size="sm" variant="secondary" isLoading={loadingMore} onClick={handleLoadMore}>
+            טען עוד ({bumpers.length} מתוך {total})
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

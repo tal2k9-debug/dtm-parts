@@ -24,11 +24,14 @@ export default function CatalogContent() {
 
   const [bumpers, setBumpers] = useState<Bumper[]>([]);
   const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [makes, setMakes] = useState<string[]>([]);
   const [models, setModels] = useState<string[]>([]);
   const [years, setYears] = useState<string[]>([]);
   const [favorites, setFavorites] = useState<string[]>([]);
+  const ITEMS_PER_PAGE = 24;
 
   // Fetch user favorites
   useEffect(() => {
@@ -118,34 +121,59 @@ export default function CatalogContent() {
   }, [filterMake, filterModel]);
 
   // Fetch bumpers with current filters
-  const fetchBumpers = useCallback(() => {
-    setLoading(true);
+  const fetchBumpers = useCallback((pageNum: number, append: boolean = false) => {
+    if (append) {
+      setLoadingMore(true);
+    } else {
+      setLoading(true);
+    }
     const params = new URLSearchParams();
     if (filterMake) params.set("make", filterMake);
     if (filterModel) params.set("model", filterModel);
     if (filterYear) params.set("year", filterYear);
     if (filterPosition) params.set("position", filterPosition);
     if (filterStatus) params.set("status", filterStatus);
-    params.set("limit", "100");
+    params.set("limit", String(ITEMS_PER_PAGE));
+    params.set("page", String(pageNum));
 
     fetch(`/api/bumpers?${params.toString()}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.bumpers && Array.isArray(data.bumpers)) {
-          setBumpers(data.bumpers);
+          if (append) {
+            setBumpers((prev) => [...prev, ...data.bumpers]);
+          } else {
+            setBumpers(data.bumpers);
+          }
           setTotal(data.pagination?.total ?? data.bumpers.length);
         } else if (Array.isArray(data)) {
-          setBumpers(data);
+          if (append) {
+            setBumpers((prev) => [...prev, ...data]);
+          } else {
+            setBumpers(data);
+          }
           setTotal(data.length);
         }
       })
       .catch((err) => console.error("Error fetching bumpers:", err))
-      .finally(() => setLoading(false));
+      .finally(() => {
+        setLoading(false);
+        setLoadingMore(false);
+      });
   }, [filterMake, filterModel, filterYear, filterPosition, filterStatus]);
 
   useEffect(() => {
-    fetchBumpers();
+    setPage(1);
+    fetchBumpers(1, false);
   }, [fetchBumpers]);
+
+  const handleLoadMore = () => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchBumpers(nextPage, true);
+  };
+
+  const hasMore = bumpers.length < total;
 
   const clearFilters = () => {
     setFilterMake("");
@@ -250,11 +278,27 @@ export default function CatalogContent() {
               ))}
             </div>
           ) : bumpers.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {bumpers.map((bumper) => (
-                <BumperCard key={bumper.id} bumper={bumper} isLoggedIn={isLoggedIn} isFavorited={favorites.includes(bumper.mondayItemId)} onToggleFavorite={handleToggleFavorite} />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {bumpers.map((bumper) => (
+                  <BumperCard key={bumper.id} bumper={bumper} isLoggedIn={isLoggedIn} isFavorited={favorites.includes(bumper.mondayItemId)} onToggleFavorite={handleToggleFavorite} />
+                ))}
+              </div>
+              {hasMore && (
+                <div className="text-center mt-10">
+                  <p className="text-text-secondary text-sm mb-4">
+                    מציג {bumpers.length} מתוך {total} טמבונים
+                  </p>
+                  <Button
+                    variant="secondary"
+                    onClick={handleLoadMore}
+                    isLoading={loadingMore}
+                  >
+                    טען עוד
+                  </Button>
+                </div>
+              )}
+            </>
           ) : (
             <motion.div
               initial={{ opacity: 0 }}
