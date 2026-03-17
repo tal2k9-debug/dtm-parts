@@ -12,9 +12,10 @@ import {
   UserPlusIcon,
   UserIcon,
   HeartIcon,
+  ArrowRightStartOnRectangleIcon,
 } from "@heroicons/react/24/outline";
 import Button from "@/components/ui/Button";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 
 export default function Header() {
   const { data: session } = useSession();
@@ -129,6 +130,18 @@ export default function Header() {
                     החשבון שלי
                   </Button>
                 </Link>
+                <button
+                  onClick={() => signOut({ callbackUrl: "/" })}
+                  className={cn(
+                    "hidden sm:flex items-center gap-1 px-3 py-2 rounded-xl text-sm font-medium transition-all",
+                    isScrolled
+                      ? "text-gray-500 hover:text-red-500 hover:bg-red-50"
+                      : "text-white/70 hover:text-white hover:bg-white/10"
+                  )}
+                  title="התנתק"
+                >
+                  <ArrowRightStartOnRectangleIcon className="w-5 h-5" />
+                </button>
               </>
             ) : (
               <Link href="/register">
@@ -214,6 +227,13 @@ export default function Header() {
                 <UserIcon className="w-5 h-5" />
                 החשבון שלי
               </Link>
+              <button
+                onClick={() => { setIsMobileMenuOpen(false); signOut({ callbackUrl: "/" }); }}
+                className="flex items-center gap-2 px-4 py-3 rounded-xl text-red-500 hover:bg-red-50 font-medium w-full"
+              >
+                <ArrowRightStartOnRectangleIcon className="w-5 h-5" />
+                התנתק
+              </button>
               </>
             ) : (
               <Link

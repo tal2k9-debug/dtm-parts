@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { signIn, useSession } from "next-auth/react";
+import { signIn, signOut, useSession } from "next-auth/react";
 import Card from "@/components/ui/Card";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
@@ -19,18 +19,18 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // If already logged in, redirect to catalog
-  useEffect(() => {
-    if (status === "authenticated") {
-      router.push("/catalog");
-    }
-  }, [status, router]);
+  // If already logged in, show option to stay or switch account
+  const isAlreadyLoggedIn = status === "authenticated";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
     try {
+      // Sign out first if already logged in (switching accounts)
+      if (isAlreadyLoggedIn) {
+        await signOut({ redirect: false });
+      }
       const result = await signIn("credentials", {
         username,
         password,
@@ -66,6 +66,27 @@ export default function LoginPage() {
           <p className="text-text-secondary mt-1">התחבר לאזור האישי שלך</p>
         </div>
         <Card>
+          {isAlreadyLoggedIn && (
+            <div className="mb-6 p-4 bg-blue-50 rounded-xl text-center">
+              <p className="text-sm text-blue-800 mb-3">
+                מחובר כ-<strong>{session?.user?.name}</strong>
+              </p>
+              <div className="flex gap-2 justify-center">
+                <button
+                  onClick={() => router.push("/catalog")}
+                  className="px-4 py-2 bg-primary text-white text-sm rounded-lg hover:bg-primary/90 transition-colors"
+                >
+                  המשך לאתר
+                </button>
+                <button
+                  onClick={() => signOut({ redirect: false }).then(() => window.location.reload())}
+                  className="px-4 py-2 bg-white border border-gray-300 text-sm rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  התנתק והחלף חשבון
+                </button>
+              </div>
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input label="שם משתמש" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="הכנס שם משתמש" icon={<UserIcon className="w-5 h-5" />} required />
             <Input label="סיסמה" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="הכנס סיסמה" icon={<LockClosedIcon className="w-5 h-5" />} required />
