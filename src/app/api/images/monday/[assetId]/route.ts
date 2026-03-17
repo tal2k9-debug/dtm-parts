@@ -1,26 +1,21 @@
-import { NextResponse } from "next/server";
-
-export const runtime = "edge";
+export const dynamic = "force-dynamic";
 
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ assetId: string }> }
 ) {
-  const { assetId } = await params;
-
-  if (!assetId || !/^\d+$/.test(assetId)) {
-    return NextResponse.json({ error: "Invalid asset ID" }, { status: 400 });
-  }
-
-  const apiKey = process.env.MONDAY_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json(
-      { error: "Monday API key not configured" },
-      { status: 500 }
-    );
-  }
-
   try {
+    const { assetId } = await params;
+
+    if (!assetId || !/^\d+$/.test(assetId)) {
+      return new Response("Invalid asset ID", { status: 400 });
+    }
+
+    const apiKey = process.env.MONDAY_API_KEY;
+    if (!apiKey) {
+      return new Response("API key missing", { status: 500 });
+    }
+
     const response = await fetch("https://api.monday.com/v2", {
       method: "POST",
       headers: {
@@ -32,32 +27,16 @@ export async function GET(
       }),
     });
 
-    if (!response.ok) {
-      return NextResponse.json(
-        { error: "Monday API request failed" },
-        { status: 502 }
-      );
-    }
-
     const data = await response.json();
     const publicUrl = data?.data?.assets?.[0]?.public_url;
 
     if (!publicUrl) {
-      return NextResponse.json({ error: "Asset not found" }, { status: 404 });
+      return new Response("Asset not found", { status: 404 });
     }
 
-    // Redirect to the signed S3 URL
-    return new Response(null, {
-      status: 302,
-      headers: {
-        Location: publicUrl,
-        "Cache-Control": "public, max-age=3600, s-maxage=3600",
-      },
-    });
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to fetch asset" },
-      { status: 500 }
-    );
+    return Response.redirect(publicUrl, 302);
+  } catch (err) {
+    console.error("Image proxy error:", err);
+    return new Response("Error", { status: 500 });
   }
 }
