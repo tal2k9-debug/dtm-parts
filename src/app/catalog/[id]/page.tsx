@@ -16,6 +16,7 @@ export default function CatalogDetailPage({ params }: { params: Promise<{ id: st
   const [bumper, setBumper] = useState<Bumper | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(0);
 
   useEffect(() => {
     fetch(`/api/bumpers/${id}`)
@@ -86,11 +87,34 @@ export default function CatalogDetailPage({ params }: { params: Promise<{ id: st
             חזרה לקטלוג
           </Link>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="bg-gray-100 rounded-2xl aspect-square flex items-center justify-center">
-              {bumper.imageUrl ? (
-                <img src={bumper.imageUrl} alt={bumper.name} className="w-full h-full object-cover rounded-2xl" />
-              ) : (
-                <TruckIcon className="w-24 h-24 text-gray-300" />
+            <div>
+              {/* Main image */}
+              <div className="bg-gray-100 rounded-2xl aspect-square flex items-center justify-center overflow-hidden mb-3">
+                {(bumper.imageUrls?.length > 0 || bumper.imageUrl) ? (
+                  <img
+                    src={bumper.imageUrls?.[selectedImage] || bumper.imageUrl || ""}
+                    alt={bumper.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <TruckIcon className="w-24 h-24 text-gray-300" />
+                )}
+              </div>
+              {/* Thumbnails */}
+              {bumper.imageUrls && bumper.imageUrls.length > 1 && (
+                <div className="grid grid-cols-5 gap-2">
+                  {bumper.imageUrls.map((url: string, i: number) => (
+                    <button
+                      key={i}
+                      onClick={() => setSelectedImage(i)}
+                      className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${
+                        selectedImage === i ? "border-primary ring-2 ring-primary/30" : "border-border hover:border-primary/50"
+                      }`}
+                    >
+                      <img src={url} alt={`${bumper.name} ${i + 1}`} className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
               )}
             </div>
             <div className="space-y-6">

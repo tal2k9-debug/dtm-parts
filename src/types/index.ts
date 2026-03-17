@@ -17,6 +17,7 @@ export interface Bumper {
   price: number | null;
   status: BumperStatus;
   imageUrl: string | null;
+  imageUrls: string[];
   lastSynced: Date;
 }
 

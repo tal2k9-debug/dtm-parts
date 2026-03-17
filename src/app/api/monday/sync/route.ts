@@ -36,9 +36,10 @@ export async function GET(request: Request) {
             carModel: bumper.carModel,
             carYear: bumper.carYear,
             position: bumper.position,
-            price: null, // no price column mapped in Monday yet
+            price: null,
             status: bumper.status,
             imageUrl: bumper.imageUrls[0] || null,
+            imageUrls: bumper.imageUrls,
           },
           create: {
             mondayItemId: bumper.mondayItemId,
@@ -50,6 +51,7 @@ export async function GET(request: Request) {
             price: null,
             status: bumper.status,
             imageUrl: bumper.imageUrls[0] || null,
+            imageUrls: bumper.imageUrls,
           },
         });
         synced++;

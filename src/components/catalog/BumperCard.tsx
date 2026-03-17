@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import Badge from "@/components/ui/Badge";
@@ -33,11 +32,11 @@ export default function BumperCard({ bumper }: { bumper: Bumper }) {
           {/* Image */}
           <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
             {bumper.imageUrl ? (
-              <Image
+              <img
                 src={bumper.imageUrl}
                 alt={bumper.name}
-                fill
-                className="object-cover group-hover:scale-105 transition-transform duration-500"
+                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                loading="lazy"
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-text-muted">

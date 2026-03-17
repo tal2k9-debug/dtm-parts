@@ -87,5 +87,6 @@ model BumperCache {
   price        Float?
   status       String
   imageUrl     String?
+  imageUrls    String[]  @default([])
   lastSynced   DateTime  @updatedAt
 }
