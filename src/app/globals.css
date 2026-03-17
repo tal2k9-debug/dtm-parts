@@ -1,10 +1,10 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-primary: #2563EB;
-  --color-primary-light: #3B82F6;
-  --color-primary-dark: #1D4ED8;
-  --color-primary-deeper: #1a1a2e;
+  --color-primary: #2B7DE9;
+  --color-primary-light: #4A9AF5;
+  --color-primary-dark: #1B63C4;
+  --color-primary-deeper: #0F3A7A;
   --color-accent: #e94560;
   --color-accent-light: #ff6b81;
   --color-accent-dark: #c73550;
@@ -60,7 +60,7 @@
 ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
 
-::selection { background-color: #2563EB; color: white; }
+::selection { background-color: #2B7DE9; color: white; }
 
 html { scroll-behavior: smooth; }
 
@@ -89,8 +89,8 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.gradient-primary { background: linear-gradient(135deg, #1D4ED8 0%, #2563EB 50%, #3B82F6 100%); }
-.gradient-hero { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #1D4ED8 100%); }
+.gradient-primary { background: linear-gradient(135deg, #1B63C4 0%, #2B7DE9 50%, #4A9AF5 100%); }
+.gradient-hero { background: linear-gradient(135deg, #0F3A7A 0%, #1B63C4 40%, #2B7DE9 100%); }
 .gradient-card { background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%); }
 
 .shimmer {
@@ -99,4 +99,4 @@ body {
   animation: shimmer 1.5s infinite;
 }
 
-*:focus-visible { outline: 2px solid #2563EB; outline-offset: 2px; }
+*:focus-visible { outline: 2px solid #2B7DE9; outline-offset: 2px; }

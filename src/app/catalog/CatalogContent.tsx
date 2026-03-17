@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import Header from "@/components/layout/Header";
@@ -11,41 +11,109 @@ import Button from "@/components/ui/Button";
 import { MagnifyingGlassIcon, FunnelIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import type { Bumper } from "@/types";
 
-const ALL_BUMPERS: Bumper[] = [
-  { id: "1", mondayItemId: "001", name: "פגוש קדמי יונדאי i20", carMake: "יונדאי", carModel: "i20", carYear: "2021", position: "FRONT", price: 850, status: "במלאי", imageUrl: null, lastSynced: new Date() },
-  { id: "2", mondayItemId: "002", name: "פגוש אחורי קיה ספורטאז'", carMake: "קיה", carModel: "ספורטאז'", carYear: "2022", position: "REAR", price: 1200, status: "במלאי", imageUrl: null, lastSynced: new Date() },
-  { id: "3", mondayItemId: "003", name: "פגוש קדמי טויוטה קורולה", carMake: "טויוטה", carModel: "קורולה", carYear: "2023", position: "FRONT", price: 950, status: "בהזמנה", imageUrl: null, lastSynced: new Date() },
-  { id: "4", mondayItemId: "004", name: "פגוש קדמי מזדה CX-5", carMake: "מזדה", carModel: "CX-5", carYear: "2020", position: "FRONT", price: 1100, status: "במלאי", imageUrl: null, lastSynced: new Date() },
-  { id: "5", mondayItemId: "005", name: "פגוש אחורי ניסאן קשקאי", carMake: "ניסאן", carModel: "קשקאי", carYear: "2022", position: "REAR", price: null, status: "אזל", imageUrl: null, lastSynced: new Date() },
-  { id: "6", mondayItemId: "006", name: "פגוש קדמי פולקסווגן גולף", carMake: "פולקסווגן", carModel: "גולף", carYear: "2021", position: "FRONT", price: 1350, status: "במלאי", imageUrl: null, lastSynced: new Date() },
-  { id: "7", mondayItemId: "007", name: "פגוש קדמי סקודה אוקטביה", carMake: "סקודה", carModel: "אוקטביה", carYear: "2023", position: "FRONT", price: 980, status: "במלאי", imageUrl: null, lastSynced: new Date() },
-  { id: "8", mondayItemId: "008", name: "פגוש אחורי הונדה CR-V", carMake: "הונדה", carModel: "CR-V", carYear: "2021", position: "REAR", price: 1450, status: "במלאי", imageUrl: null, lastSynced: new Date() },
-];
-
 export default function CatalogContent() {
   const searchParams = useSearchParams();
   const [filterMake, setFilterMake] = useState(searchParams.get("make") || "");
+  const [filterModel, setFilterModel] = useState(searchParams.get("model") || "");
+  const [filterYear, setFilterYear] = useState(searchParams.get("year") || "");
   const [filterPosition, setFilterPosition] = useState(searchParams.get("position") || "");
   const [filterStatus, setFilterStatus] = useState("");
 
-  const makes = [...new Set(ALL_BUMPERS.map((b) => b.carMake))];
+  const [bumpers, setBumpers] = useState<Bumper[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [makes, setMakes] = useState<string[]>([]);
+  const [models, setModels] = useState<string[]>([]);
+  const [years, setYears] = useState<string[]>([]);
 
-  const filtered = useMemo(() => {
-    return ALL_BUMPERS.filter((b) => {
-      if (filterMake && b.carMake !== filterMake) return false;
-      if (filterPosition && b.position !== filterPosition) return false;
-      if (filterStatus && b.status !== filterStatus) return false;
-      return true;
-    });
-  }, [filterMake, filterPosition, filterStatus]);
+  // Fetch available makes for filter dropdown
+  useEffect(() => {
+    fetch("/api/bumpers/makes")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setMakes(data);
+      })
+      .catch((err) => console.error("Error fetching makes:", err));
+  }, []);
+
+  // Fetch models when make changes
+  useEffect(() => {
+    if (!filterMake) {
+      setModels([]);
+      return;
+    }
+    fetch(`/api/bumpers/models?make=${encodeURIComponent(filterMake)}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setModels(data);
+      })
+      .catch((err) => console.error("Error fetching models:", err));
+  }, [filterMake]);
+
+  // Fetch years when make+model change
+  useEffect(() => {
+    if (!filterMake || !filterModel) {
+      setYears([]);
+      return;
+    }
+    fetch(`/api/bumpers/years?make=${encodeURIComponent(filterMake)}&model=${encodeURIComponent(filterModel)}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setYears(data);
+      })
+      .catch((err) => console.error("Error fetching years:", err));
+  }, [filterMake, filterModel]);
+
+  // Fetch bumpers with current filters
+  const fetchBumpers = useCallback(() => {
+    setLoading(true);
+    const params = new URLSearchParams();
+    if (filterMake) params.set("make", filterMake);
+    if (filterModel) params.set("model", filterModel);
+    if (filterYear) params.set("year", filterYear);
+    if (filterPosition) params.set("position", filterPosition);
+    if (filterStatus) params.set("status", filterStatus);
+    params.set("limit", "100");
+
+    fetch(`/api/bumpers?${params.toString()}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.bumpers && Array.isArray(data.bumpers)) {
+          setBumpers(data.bumpers);
+          setTotal(data.pagination?.total ?? data.bumpers.length);
+        } else if (Array.isArray(data)) {
+          setBumpers(data);
+          setTotal(data.length);
+        }
+      })
+      .catch((err) => console.error("Error fetching bumpers:", err))
+      .finally(() => setLoading(false));
+  }, [filterMake, filterModel, filterYear, filterPosition, filterStatus]);
+
+  useEffect(() => {
+    fetchBumpers();
+  }, [fetchBumpers]);
 
   const clearFilters = () => {
     setFilterMake("");
+    setFilterModel("");
+    setFilterYear("");
     setFilterPosition("");
     setFilterStatus("");
   };
 
-  const hasFilters = filterMake || filterPosition || filterStatus;
+  const handleMakeChange = (value: string) => {
+    setFilterMake(value);
+    setFilterModel("");
+    setFilterYear("");
+  };
+
+  const handleModelChange = (value: string) => {
+    setFilterModel(value);
+    setFilterYear("");
+  };
+
+  const hasFilters = filterMake || filterModel || filterYear || filterPosition || filterStatus;
 
   return (
     <>
@@ -57,7 +125,7 @@ export default function CatalogContent() {
               קטלוג טמבונים
             </h1>
             <p className="text-text-secondary text-lg">
-              {filtered.length} טמבונים נמצאו
+              {loading ? "טוען..." : `${total} טמבונים נמצאו`}
             </p>
           </div>
 
@@ -77,12 +145,24 @@ export default function CatalogContent() {
                 </button>
               )}
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
               <Select
                 placeholder="כל היצרנים"
                 value={filterMake}
-                onChange={(e) => setFilterMake(e.target.value)}
+                onChange={(e) => handleMakeChange(e.target.value)}
                 options={makes.map((m) => ({ value: m, label: m }))}
+              />
+              <Select
+                placeholder="כל הדגמים"
+                value={filterModel}
+                onChange={(e) => handleModelChange(e.target.value)}
+                options={models.map((m) => ({ value: m, label: m }))}
+              />
+              <Select
+                placeholder="כל השנים"
+                value={filterYear}
+                onChange={(e) => setFilterYear(e.target.value)}
+                options={years.map((y) => ({ value: y, label: y }))}
               />
               <Select
                 placeholder="כל המיקומים"
@@ -106,9 +186,19 @@ export default function CatalogContent() {
             </div>
           </div>
 
-          {filtered.length > 0 ? (
+          {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filtered.map((bumper) => (
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="bg-surface rounded-2xl border border-border p-4">
+                  <div className="shimmer h-48 rounded-xl mb-4" />
+                  <div className="shimmer h-5 w-3/4 rounded mb-3" />
+                  <div className="shimmer h-4 w-1/2 rounded" />
+                </div>
+              ))}
+            </div>
+          ) : bumpers.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {bumpers.map((bumper) => (
                 <BumperCard key={bumper.id} bumper={bumper} />
               ))}
             </div>

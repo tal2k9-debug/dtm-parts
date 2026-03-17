@@ -1,94 +1,31 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import BumperCard from "@/components/catalog/BumperCard";
 import Button from "@/components/ui/Button";
 import Link from "next/link";
 import type { Bumper } from "@/types";
 
-// Mock data — will be replaced with real BumperCache data
-const MOCK_BUMPERS: Bumper[] = [
-  {
-    id: "1",
-    mondayItemId: "001",
-    name: "פגוש קדמי יונדאי i20",
-    carMake: "יונדאי",
-    carModel: "i20",
-    carYear: "2021",
-    position: "FRONT",
-    price: 850,
-    status: "במלאי",
-    imageUrl: null,
-    lastSynced: new Date(),
-  },
-  {
-    id: "2",
-    mondayItemId: "002",
-    name: "פגוש אחורי קיה ספורטאז'",
-    carMake: "קיה",
-    carModel: "ספורטאז'",
-    carYear: "2022",
-    position: "REAR",
-    price: 1200,
-    status: "במלאי",
-    imageUrl: null,
-    lastSynced: new Date(),
-  },
-  {
-    id: "3",
-    mondayItemId: "003",
-    name: "פגוש קדמי טויוטה קורולה",
-    carMake: "טויוטה",
-    carModel: "קורולה",
-    carYear: "2023",
-    position: "FRONT",
-    price: 950,
-    status: "בהזמנה",
-    imageUrl: null,
-    lastSynced: new Date(),
-  },
-  {
-    id: "4",
-    mondayItemId: "004",
-    name: "פגוש קדמי מזדה CX-5",
-    carMake: "מזדה",
-    carModel: "CX-5",
-    carYear: "2020",
-    position: "FRONT",
-    price: 1100,
-    status: "במלאי",
-    imageUrl: null,
-    lastSynced: new Date(),
-  },
-  {
-    id: "5",
-    mondayItemId: "005",
-    name: "פגוש אחורי ניסאן קשקאי",
-    carMake: "ניסאן",
-    carModel: "קשקאי",
-    carYear: "2022",
-    position: "REAR",
-    price: null,
-    status: "אזל",
-    imageUrl: null,
-    lastSynced: new Date(),
-  },
-  {
-    id: "6",
-    mondayItemId: "006",
-    name: "פגוש קדמי פולקסווגן גולף",
-    carMake: "פולקסווגן",
-    carModel: "גולף",
-    carYear: "2021",
-    position: "FRONT",
-    price: 1350,
-    status: "במלאי",
-    imageUrl: null,
-    lastSynced: new Date(),
-  },
-];
-
 export default function PopularBumpers() {
+  const [bumpers, setBumpers] = useState<Bumper[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/bumpers?limit=8&status=במלאי")
+      .then((res) => res.json())
+      .then((data) => {
+        // The API returns { bumpers, pagination }
+        if (data.bumpers && Array.isArray(data.bumpers)) {
+          setBumpers(data.bumpers);
+        } else if (Array.isArray(data)) {
+          setBumpers(data);
+        }
+      })
+      .catch((err) => console.error("Error fetching popular bumpers:", err))
+      .finally(() => setLoading(false));
+  }, []);
+
   return (
     <section className="py-20 bg-surface">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -113,11 +50,28 @@ export default function PopularBumpers() {
           </Link>
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {MOCK_BUMPERS.map((bumper) => (
-            <BumperCard key={bumper.id} bumper={bumper} />
-          ))}
-        </div>
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="bg-surface rounded-2xl border border-border p-4">
+                <div className="shimmer h-48 rounded-xl mb-4" />
+                <div className="shimmer h-5 w-3/4 rounded mb-3" />
+                <div className="shimmer h-4 w-1/2 rounded" />
+              </div>
+            ))}
+          </div>
+        ) : bumpers.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {bumpers.map((bumper) => (
+              <BumperCard key={bumper.id} bumper={bumper} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12 text-text-secondary">
+            <p className="text-lg">אין טמבונים זמינים כרגע</p>
+            <p className="text-sm mt-2">נסו שוב מאוחר יותר</p>
+          </div>
+        )}
 
         <div className="mt-8 text-center sm:hidden">
           <Link href="/catalog">

@@ -10,24 +10,6 @@ import {
 import Button from "@/components/ui/Button";
 import type { VehicleSelection } from "@/types";
 
-// Temporary mock data - will be replaced with real BumperCache data
-const MOCK_DATA = {
-  makes: ["יונדאי", "קיה", "טויוטה", "מזדה", "ניסאן", "שברולט", "פולקסווגן", "סקודה", "הונדה", "פורד"],
-  models: {
-    "יונדאי": ["i10", "i20", "i25", "i30", "i35", "טוסון", "סנטה פה", "קונה"],
-    "קיה": ["פיקנטו", "ריו", "סיד", "ספורטאז'", "סורנטו", "ניירו"],
-    "טויוטה": ["יאריס", "קורולה", "קאמרי", "C-HR", "ראב 4", "לנד קרוזר"],
-    "מזדה": ["2", "3", "6", "CX-3", "CX-5", "CX-30"],
-    "ניסאן": ["מיקרה", "ג'וק", "קשקאי", "X-Trail", "ליף"],
-    "שברולט": ["ספארק", "אוניקס", "טראקס", "אקווינוקס"],
-    "פולקסווגן": ["פולו", "גולף", "טי-רוק", "טיגואן", "ID.3"],
-    "סקודה": ["פאביה", "אוקטביה", "קמיק", "קרוק"],
-    "הונדה": ["ג'אז", "סיוויק", "HR-V", "CR-V"],
-    "פורד": ["פיאסטה", "פוקוס", "פומה", "קוגה"],
-  } as Record<string, string[]>,
-  years: ["2024", "2023", "2022", "2021", "2020", "2019", "2018", "2017", "2016", "2015"],
-};
-
 const steps = [
   { key: "make", label: "יצרן", icon: "🚗" },
   { key: "model", label: "דגם", icon: "📋" },
@@ -39,9 +21,70 @@ export default function VehicleSelector() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0);
   const [selection, setSelection] = useState<Partial<VehicleSelection>>({});
+  const [makes, setMakes] = useState<string[]>([]);
+  const [models, setModels] = useState<string[]>([]);
+  const [years, setYears] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  // Fetch makes on mount
+  useEffect(() => {
+    setLoading(true);
+    fetch("/api/bumpers/makes")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setMakes(data);
+      })
+      .catch((err) => console.error("Error fetching makes:", err))
+      .finally(() => setLoading(false));
+  }, []);
+
+  // Fetch models when make changes
+  useEffect(() => {
+    if (!selection.make) {
+      setModels([]);
+      return;
+    }
+    setLoading(true);
+    fetch(`/api/bumpers/models?make=${encodeURIComponent(selection.make)}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setModels(data);
+      })
+      .catch((err) => console.error("Error fetching models:", err))
+      .finally(() => setLoading(false));
+  }, [selection.make]);
+
+  // Fetch years when model changes
+  useEffect(() => {
+    if (!selection.make || !selection.model) {
+      setYears([]);
+      return;
+    }
+    setLoading(true);
+    fetch(
+      `/api/bumpers/years?make=${encodeURIComponent(selection.make)}&model=${encodeURIComponent(selection.model)}`
+    )
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setYears(data);
+      })
+      .catch((err) => console.error("Error fetching years:", err))
+      .finally(() => setLoading(false));
+  }, [selection.make, selection.model]);
 
   const handleSelect = (key: string, value: string) => {
     const newSelection = { ...selection, [key]: value };
+    // Clear dependent selections when a parent changes
+    if (key === "make") {
+      delete newSelection.model;
+      delete newSelection.year;
+      delete newSelection.position;
+    } else if (key === "model") {
+      delete newSelection.year;
+      delete newSelection.position;
+    } else if (key === "year") {
+      delete newSelection.position;
+    }
     setSelection(newSelection);
 
     if (currentStep < steps.length - 1) {
@@ -76,11 +119,11 @@ export default function VehicleSelector() {
     const step = steps[currentStep];
     switch (step.key) {
       case "make":
-        return MOCK_DATA.makes;
+        return makes;
       case "model":
-        return selection.make ? MOCK_DATA.models[selection.make] || [] : [];
+        return models;
       case "year":
-        return MOCK_DATA.years;
+        return years;
       case "position":
         return ["FRONT", "REAR"];
       default:
@@ -96,6 +139,8 @@ export default function VehicleSelector() {
 
   const isComplete =
     selection.make && selection.model && selection.year && selection.position;
+
+  const options = getOptions();
 
   return (
     <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/50 overflow-hidden">
@@ -185,15 +230,25 @@ export default function VehicleSelector() {
             transition={{ duration: 0.2 }}
             className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto"
           >
-            {getOptions().map((option) => (
-              <button
-                key={option}
-                onClick={() => handleSelect(steps[currentStep].key, option)}
-                className="text-right px-4 py-3 rounded-xl border border-border hover:border-primary hover:bg-primary/5 text-sm font-medium text-text transition-all duration-200 active:scale-[0.98]"
-              >
-                {getDisplayLabel(option)}
-              </button>
-            ))}
+            {loading && options.length === 0 ? (
+              <div className="col-span-2 py-8 text-center text-text-muted text-sm">
+                טוען...
+              </div>
+            ) : options.length === 0 && steps[currentStep].key !== "position" ? (
+              <div className="col-span-2 py-8 text-center text-text-muted text-sm">
+                אין נתונים זמינים
+              </div>
+            ) : (
+              options.map((option) => (
+                <button
+                  key={option}
+                  onClick={() => handleSelect(steps[currentStep].key, option)}
+                  className="text-right px-4 py-3 rounded-xl border border-border hover:border-primary hover:bg-primary/5 text-sm font-medium text-text transition-all duration-200 active:scale-[0.98]"
+                >
+                  {getDisplayLabel(option)}
+                </button>
+              ))
+            )}
           </motion.div>
         </AnimatePresence>
       </div>
