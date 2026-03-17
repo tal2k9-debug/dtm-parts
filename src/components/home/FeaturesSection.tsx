@@ -43,8 +43,8 @@ const features = [
   },
   {
     icon: SparklesIcon,
-    title: "מוצרים מייבוא",
-    description: "טמבונים משומשים באיכות מעולה",
+    title: "הזמנות מיוחדות",
+    description: "הזמנות מיוחדות לפי בקשה — לא מצאת? נמצא בשבילך",
     color: "bg-pink-50 text-pink-600",
   },
 ];
