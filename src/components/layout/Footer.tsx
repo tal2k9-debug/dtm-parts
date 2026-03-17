@@ -1,19 +1,20 @@
 import Link from "next/link";
 import Image from "next/image";
-import { SITE_NAME } from "@/lib/constants";
+import { SITE_NAME, ADMIN_PHONE, ADMIN_PHONE_INTL, ADMIN_WHATSAPP_LINK } from "@/lib/constants";
 import {
   PhoneIcon,
   EnvelopeIcon,
   MapPinIcon,
   ClockIcon,
 } from "@heroicons/react/24/outline";
+import LogoutButton from "./LogoutButton";
 
 export default function Footer() {
   return (
     <footer className="bg-primary-deeper text-white">
       {/* WhatsApp Float Button */}
       <a
-        href="https://wa.me/972XXXXXXXXX"
+        href={ADMIN_WHATSAPP_LINK}
         target="_blank"
         rel="noopener noreferrer"
         className="fixed bottom-6 left-6 z-40 bg-whatsapp hover:bg-whatsapp-dark text-white w-14 h-14 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
@@ -74,11 +75,11 @@ export default function Footer() {
             <ul className="space-y-3">
               <li className="flex items-center gap-3 text-sm text-white/70">
                 <PhoneIcon className="w-5 h-5 text-primary-light shrink-0" />
-                <span>072-XXX-XXXX</span>
+                <a href={`tel:${ADMIN_PHONE_INTL}`} className="hover:text-white transition-colors">{ADMIN_PHONE}</a>
               </li>
               <li className="flex items-center gap-3 text-sm text-white/70">
                 <EnvelopeIcon className="w-5 h-5 text-primary-light shrink-0" />
-                <span>info@dtmparts.co.il</span>
+                <a href="mailto:ditiemparts@gmail.com" className="hover:text-white transition-colors">ditiemparts@gmail.com</a>
               </li>
               <li className="flex items-center gap-3 text-sm text-white/70">
                 <MapPinIcon className="w-5 h-5 text-primary-light shrink-0" />
@@ -108,7 +109,8 @@ export default function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="border-t border-white/10 mt-12 pt-8 text-center">
+        <div className="border-t border-white/10 mt-12 pt-8 flex flex-col items-center gap-3">
+          <LogoutButton />
           <p className="text-white/50 text-sm">
             &copy; {new Date().getFullYear()} {SITE_NAME}. כל הזכויות שמורות.
           </p>
