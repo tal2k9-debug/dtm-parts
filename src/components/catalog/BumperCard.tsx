@@ -1,10 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { HeartIcon } from "@heroicons/react/24/outline";
+import { HeartIcon as HeartIconSolid } from "@heroicons/react/24/solid";
 import Badge from "@/components/ui/Badge";
 import { formatPrice, getPositionLabel } from "@/lib/utils";
-import type { Bumper, BumperStatus } from "@/types";
+import type { Bumper } from "@/types";
 
 function getStatusBadgeVariant(status: string): "success" | "danger" | "warning" {
   switch (status) {
@@ -32,7 +35,28 @@ function getStatusLabel(status: string): string {
   }
 }
 
-export default function BumperCard({ bumper }: { bumper: Bumper }) {
+interface BumperCardProps {
+  bumper: Bumper;
+  isLoggedIn?: boolean;
+  isFavorited?: boolean;
+  onToggleFavorite?: (bumperId: string) => void;
+}
+
+export default function BumperCard({ bumper, isLoggedIn, isFavorited, onToggleFavorite }: BumperCardProps) {
+  const router = useRouter();
+
+  const handleFavoriteClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!isLoggedIn) {
+      router.push("/register");
+      return;
+    }
+
+    onToggleFavorite?.(bumper.mondayItemId);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -64,6 +88,18 @@ export default function BumperCard({ bumper }: { bumper: Bumper }) {
                 {getStatusLabel(bumper.status)}
               </Badge>
             </div>
+            {/* Favorite heart button */}
+            <button
+              onClick={handleFavoriteClick}
+              className="absolute top-3 left-3 w-9 h-9 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors duration-200 shadow-sm"
+              aria-label={isFavorited ? "הסר ממועדפים" : "הוסף למועדפים"}
+            >
+              {isFavorited ? (
+                <HeartIconSolid className="w-5 h-5 text-red-500" />
+              ) : (
+                <HeartIcon className="w-5 h-5 text-gray-500 hover:text-red-400 transition-colors" />
+              )}
+            </button>
           </div>
 
           {/* Content */}

@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import Card from "@/components/ui/Card";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
@@ -13,10 +13,18 @@ import { UserIcon, LockClosedIcon } from "@heroicons/react/24/outline";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // If already logged in, redirect to catalog
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.push("/catalog");
+    }
+  }, [status, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,8 +39,10 @@ export default function LoginPage() {
 
       if (result?.error) {
         setError("שם משתמש או סיסמה שגויים");
-      } else {
+      } else if (result?.ok === true) {
         router.push("/catalog");
+      } else {
+        setError("שם משתמש או סיסמה שגויים");
       }
     } catch {
       setError("שגיאה בהתחברות");

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
 import BumperCard from "@/components/catalog/BumperCard";
 import Button from "@/components/ui/Button";
@@ -8,14 +9,16 @@ import Link from "next/link";
 import type { Bumper } from "@/types";
 
 export default function PopularBumpers() {
+  const { data: session } = useSession();
+  const isLoggedIn = !!session?.user;
   const [bumpers, setBumpers] = useState<Bumper[]>([]);
   const [loading, setLoading] = useState(true);
+  const [favorites, setFavorites] = useState<string[]>([]);
 
   useEffect(() => {
     fetch("/api/bumpers?limit=8&status=במלאי")
       .then((res) => res.json())
       .then((data) => {
-        // The API returns { bumpers, pagination }
         if (data.bumpers && Array.isArray(data.bumpers)) {
           setBumpers(data.bumpers);
         } else if (Array.isArray(data)) {
@@ -25,6 +28,52 @@ export default function PopularBumpers() {
       .catch((err) => console.error("Error fetching popular bumpers:", err))
       .finally(() => setLoading(false));
   }, []);
+
+  // Fetch user favorites
+  useEffect(() => {
+    if (!isLoggedIn) {
+      setFavorites([]);
+      return;
+    }
+    fetch("/api/favorites")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.favorites && Array.isArray(data.favorites)) {
+          setFavorites(data.favorites);
+        }
+      })
+      .catch((err) => console.error("Error fetching favorites:", err));
+  }, [isLoggedIn]);
+
+  const handleToggleFavorite = async (bumperId: string) => {
+    const isFav = favorites.includes(bumperId);
+    if (isFav) {
+      setFavorites((prev) => prev.filter((id) => id !== bumperId));
+    } else {
+      setFavorites((prev) => [...prev, bumperId]);
+    }
+
+    try {
+      const res = await fetch("/api/favorites", {
+        method: isFav ? "DELETE" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bumperId }),
+      });
+      if (!res.ok) {
+        if (isFav) {
+          setFavorites((prev) => [...prev, bumperId]);
+        } else {
+          setFavorites((prev) => prev.filter((id) => id !== bumperId));
+        }
+      }
+    } catch {
+      if (isFav) {
+        setFavorites((prev) => [...prev, bumperId]);
+      } else {
+        setFavorites((prev) => prev.filter((id) => id !== bumperId));
+      }
+    }
+  };
 
   return (
     <section className="py-20 bg-surface">
@@ -63,7 +112,7 @@ export default function PopularBumpers() {
         ) : bumpers.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {bumpers.map((bumper) => (
-              <BumperCard key={bumper.id} bumper={bumper} />
+              <BumperCard key={bumper.id} bumper={bumper} isLoggedIn={isLoggedIn} isFavorited={favorites.includes(bumper.mondayItemId)} onToggleFavorite={handleToggleFavorite} />
             ))}
           </div>
         ) : (

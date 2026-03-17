@@ -11,6 +11,7 @@ import {
   PhoneIcon,
   UserPlusIcon,
   UserIcon,
+  HeartIcon,
 } from "@heroicons/react/24/outline";
 import Button from "@/components/ui/Button";
 import { useSession } from "next-auth/react";
@@ -102,11 +103,33 @@ export default function Header() {
               <span>התקשרו אלינו</span>
             </a>
             {isLoggedIn ? (
-              <Link href="/account">
-                <Button size="sm" variant={isScrolled ? "outline" : "accent"} icon={<UserIcon className="w-4 h-4" />}>
-                  החשבון שלי
-                </Button>
-              </Link>
+              <>
+                <span
+                  className={cn(
+                    "hidden sm:block text-sm font-medium transition-colors",
+                    isScrolled ? "text-primary" : "text-white"
+                  )}
+                >
+                  {`שלום, ${session?.user?.name || "אורח"}`}
+                </span>
+                <Link
+                  href="/account/favorites"
+                  className={cn(
+                    "hidden sm:flex items-center gap-1 px-3 py-2 rounded-xl text-sm font-medium transition-all",
+                    isScrolled
+                      ? "text-red-500 hover:bg-red-50"
+                      : "text-white hover:bg-white/10"
+                  )}
+                  title="מועדפים"
+                >
+                  <HeartIcon className="w-5 h-5" />
+                </Link>
+                <Link href="/account">
+                  <Button size="sm" variant={isScrolled ? "outline" : "accent"} icon={<UserIcon className="w-4 h-4" />}>
+                    החשבון שלי
+                  </Button>
+                </Link>
+              </>
             ) : (
               <Link href="/register">
                 <Button size="sm" variant={isScrolled ? "outline" : "accent"} icon={<UserPlusIcon className="w-4 h-4" />}>
@@ -171,6 +194,18 @@ export default function Header() {
           </a>
           <div className="border-t border-border pt-3 mt-2">
             {isLoggedIn ? (
+              <>
+              <div className="px-4 py-2 text-sm font-bold text-primary">
+                {`שלום, ${session?.user?.name || "אורח"} 👋`}
+              </div>
+              <Link
+                href="/account/favorites"
+                className="flex items-center gap-2 px-4 py-3 rounded-xl text-red-500 font-medium"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <HeartIcon className="w-5 h-5" />
+                מועדפים
+              </Link>
               <Link
                 href="/account"
                 className="flex items-center gap-2 px-4 py-3 rounded-xl text-primary font-bold"
@@ -179,6 +214,7 @@ export default function Header() {
                 <UserIcon className="w-5 h-5" />
                 החשבון שלי
               </Link>
+              </>
             ) : (
               <Link
                 href="/register"

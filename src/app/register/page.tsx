@@ -60,8 +60,19 @@ export default function RegisterPage() {
         return;
       }
 
-      // Registration successful - redirect to login
-      router.push("/login?registered=true");
+      // Registration successful - auto-login
+      const loginResult = await signIn("credentials", {
+        username: form.username,
+        password: form.password,
+        redirect: false,
+      });
+
+      if (loginResult?.ok === true) {
+        router.push("/catalog");
+      } else {
+        // Fallback: redirect to login if auto-login fails
+        router.push("/login?registered=true");
+      }
     } catch {
       setError("שגיאה בהרשמה, נסה שוב");
     } finally {

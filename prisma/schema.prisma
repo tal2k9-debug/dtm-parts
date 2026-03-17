@@ -24,6 +24,7 @@ model User {
   lastLogin       DateTime?
   requests        QuoteRequest[]
   messages        Message[]
+  favorites       Favorite[]
 }
 
 enum Role {
@@ -74,6 +75,16 @@ model Message {
   imageUrl   String?
   readAt     DateTime?
   createdAt  DateTime     @default(now())
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  bumperId  String   // mondayItemId from BumperCache
+  createdAt DateTime @default(now())
+
+  @@unique([userId, bumperId])
 }
 
 model BumperCache {

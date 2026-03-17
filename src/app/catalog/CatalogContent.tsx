@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -13,6 +14,8 @@ import type { Bumper } from "@/types";
 
 export default function CatalogContent() {
   const searchParams = useSearchParams();
+  const { data: session } = useSession();
+  const isLoggedIn = !!session?.user;
   const [filterMake, setFilterMake] = useState(searchParams.get("make") || "");
   const [filterModel, setFilterModel] = useState(searchParams.get("model") || "");
   const [filterYear, setFilterYear] = useState(searchParams.get("year") || "");
@@ -25,6 +28,56 @@ export default function CatalogContent() {
   const [makes, setMakes] = useState<string[]>([]);
   const [models, setModels] = useState<string[]>([]);
   const [years, setYears] = useState<string[]>([]);
+  const [favorites, setFavorites] = useState<string[]>([]);
+
+  // Fetch user favorites
+  useEffect(() => {
+    if (!isLoggedIn) {
+      setFavorites([]);
+      return;
+    }
+    fetch("/api/favorites")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.favorites && Array.isArray(data.favorites)) {
+          setFavorites(data.favorites);
+        }
+      })
+      .catch((err) => console.error("Error fetching favorites:", err));
+  }, [isLoggedIn]);
+
+  const handleToggleFavorite = async (bumperId: string) => {
+    const isFav = favorites.includes(bumperId);
+    // Optimistic update
+    if (isFav) {
+      setFavorites((prev) => prev.filter((id) => id !== bumperId));
+    } else {
+      setFavorites((prev) => [...prev, bumperId]);
+    }
+
+    try {
+      const res = await fetch("/api/favorites", {
+        method: isFav ? "DELETE" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bumperId }),
+      });
+      if (!res.ok) {
+        // Revert on error
+        if (isFav) {
+          setFavorites((prev) => [...prev, bumperId]);
+        } else {
+          setFavorites((prev) => prev.filter((id) => id !== bumperId));
+        }
+      }
+    } catch {
+      // Revert on error
+      if (isFav) {
+        setFavorites((prev) => [...prev, bumperId]);
+      } else {
+        setFavorites((prev) => prev.filter((id) => id !== bumperId));
+      }
+    }
+  };
 
   // Fetch available makes for filter dropdown
   useEffect(() => {
@@ -199,7 +252,7 @@ export default function CatalogContent() {
           ) : bumpers.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {bumpers.map((bumper) => (
-                <BumperCard key={bumper.id} bumper={bumper} />
+                <BumperCard key={bumper.id} bumper={bumper} isLoggedIn={isLoggedIn} isFavorited={favorites.includes(bumper.mondayItemId)} onToggleFavorite={handleToggleFavorite} />
               ))}
             </div>
           ) : (

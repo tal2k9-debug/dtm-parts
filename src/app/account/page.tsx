@@ -7,7 +7,7 @@ import Link from "next/link";
 import Card from "@/components/ui/Card";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import { ShoppingBagIcon, DocumentTextIcon, ChatBubbleLeftRightIcon } from "@heroicons/react/24/outline";
+import { ShoppingBagIcon, DocumentTextIcon, ChatBubbleLeftRightIcon, HeartIcon } from "@heroicons/react/24/outline";
 
 export default function AccountPage() {
   const { data: session, status } = useSession();
@@ -44,12 +44,19 @@ export default function AccountPage() {
             <h1 className="text-3xl font-extrabold text-text">האזור שלי</h1>
             <p className="text-text-secondary mt-1">שלום, {session.user?.name}!</p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <Link href="/catalog">
               <Card hover className="text-center py-8 cursor-pointer">
                 <ShoppingBagIcon className="w-10 h-10 text-primary mx-auto mb-3" />
                 <h3 className="font-bold text-text mb-1">קטלוג</h3>
                 <p className="text-sm text-text-secondary">עיינו במלאי</p>
+              </Card>
+            </Link>
+            <Link href="/account/favorites">
+              <Card hover className="text-center py-8 cursor-pointer">
+                <HeartIcon className="w-10 h-10 text-red-500 mx-auto mb-3" />
+                <h3 className="font-bold text-text mb-1">מועדפים</h3>
+                <p className="text-sm text-text-secondary">הטמבונים ששמרתם</p>
               </Card>
             </Link>
             <Link href="/quote">
