@@ -1,13 +1,40 @@
 "use client";
 
+import { useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Card from "@/components/ui/Card";
-import Button from "@/components/ui/Button";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { ShoppingBagIcon, DocumentTextIcon, ChatBubbleLeftRightIcon } from "@heroicons/react/24/outline";
 
 export default function AccountPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/login");
+    }
+  }, [status, router]);
+
+  if (status === "loading") {
+    return (
+      <>
+        <Header />
+        <main className="pt-24 pb-16 min-h-screen bg-background flex items-center justify-center">
+          <p className="text-text-secondary">טוען...</p>
+        </main>
+        <Footer />
+      </>
+    );
+  }
+
+  if (!session) {
+    return null;
+  }
+
   return (
     <>
       <Header />
@@ -15,7 +42,7 @@ export default function AccountPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-8">
             <h1 className="text-3xl font-extrabold text-text">האזור שלי</h1>
-            <p className="text-text-secondary mt-1">שלום, יוסי!</p>
+            <p className="text-text-secondary mt-1">שלום, {session.user?.name}!</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             <Link href="/catalog">
