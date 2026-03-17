@@ -123,15 +123,30 @@ export default function CatalogDetailPage({ params }: { params: Promise<{ id: st
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div>
               {/* Main image */}
-              <div className="bg-gray-100 rounded-2xl aspect-square flex items-center justify-center overflow-hidden mb-3">
+              <div className="relative bg-gray-100 rounded-2xl aspect-square flex items-center justify-center overflow-hidden mb-3">
                 {(bumper.imageUrls?.length > 0 || bumper.imageUrl) ? (
                   <img
                     src={bumper.imageUrls?.[selectedImage] || bumper.imageUrl || ""}
                     alt={bumper.name}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain"
                   />
                 ) : (
                   <TruckIcon className="w-24 h-24 text-gray-300" />
+                )}
+                {/* Floating favorite button on image */}
+                {isLoggedIn && (
+                  <button
+                    onClick={toggleFavorite}
+                    disabled={favLoading}
+                    className="absolute top-3 left-3 p-2.5 bg-white/80 backdrop-blur-sm rounded-full shadow-md hover:bg-white transition-all"
+                    title={isFavorited ? "הסר ממועדפים" : "הוסף למועדפים"}
+                  >
+                    {isFavorited ? (
+                      <HeartSolid className="w-6 h-6 text-red-500" />
+                    ) : (
+                      <HeartIcon className="w-6 h-6 text-gray-500 hover:text-red-400" />
+                    )}
+                  </button>
                 )}
               </div>
               {/* Thumbnails */}
@@ -145,7 +160,7 @@ export default function CatalogDetailPage({ params }: { params: Promise<{ id: st
                         selectedImage === i ? "border-primary ring-2 ring-primary/30" : "border-border hover:border-primary/50"
                       }`}
                     >
-                      <img src={url} alt={`${bumper.name} ${i + 1}`} className="w-full h-full object-cover" />
+                      <img src={url} alt={`${bumper.name} ${i + 1}`} className="w-full h-full object-contain bg-gray-50" />
                     </button>
                   ))}
                 </div>

@@ -108,8 +108,8 @@ export default function AdminLayout({
               <Image
                 src="/images/logo.jpeg"
                 alt={SITE_NAME}
-                width={40}
-                height={40}
+                width={48}
+                height={48}
                 className="rounded-full"
               />
               <div>

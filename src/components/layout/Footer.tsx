@@ -32,8 +32,8 @@ export default function Footer() {
               <Image
                 src="/images/logo.jpeg"
                 alt={SITE_NAME}
-                width={44}
-                height={44}
+                width={52}
+                height={52}
                 className="rounded-full"
               />
               <div>

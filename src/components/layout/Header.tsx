@@ -47,8 +47,8 @@ export default function Header() {
             <Image
               src="/images/logo.jpeg"
               alt={SITE_NAME}
-              width={48}
-              height={48}
+              width={56}
+              height={56}
               className="rounded-full"
             />
             <div className="hidden sm:block">

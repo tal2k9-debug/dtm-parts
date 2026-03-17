@@ -88,8 +88,8 @@ export default function RegisterPage() {
             <Image
               src="/images/logo.jpeg"
               alt={SITE_NAME}
-              width={64}
-              height={64}
+              width={80}
+              height={80}
               className="rounded-full mx-auto"
             />
           </Link>

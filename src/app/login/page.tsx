@@ -60,7 +60,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link href="/" className="inline-block mb-4">
-            <Image src="/images/logo.jpeg" alt={SITE_NAME} width={64} height={64} className="rounded-full mx-auto" />
+            <Image src="/images/logo.jpeg" alt={SITE_NAME} width={80} height={80} className="rounded-full mx-auto" />
           </Link>
           <h1 className="text-2xl font-bold text-text">התחברות</h1>
           <p className="text-text-secondary mt-1">התחבר לאזור האישי שלך</p>

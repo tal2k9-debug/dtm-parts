@@ -72,7 +72,7 @@ export default function BumperCard({ bumper, isLoggedIn, isFavorited, onToggleFa
               <img
                 src={bumper.imageUrl}
                 alt={bumper.name}
-                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                className="absolute inset-0 w-full h-full object-contain bg-gray-50 group-hover:scale-105 transition-transform duration-500"
                 loading="lazy"
               />
             ) : (
