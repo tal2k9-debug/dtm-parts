@@ -21,6 +21,7 @@ import {
 
 export default function RegisterPage() {
   const router = useRouter();
+  const [customerType, setCustomerType] = useState<"" | "private" | "business">("");
   const [form, setForm] = useState({
     username: "",
     password: "",
@@ -84,7 +85,56 @@ export default function RegisterPage() {
           <p className="text-text-secondary mt-1">צור חשבון חדש ב-DTM PARTS</p>
         </div>
         <Card>
+          {/* Step 1: Choose customer type */}
+          {!customerType && (
+            <div className="space-y-4">
+              <p className="text-center text-text-secondary mb-2">בחר סוג חשבון:</p>
+              <button
+                type="button"
+                onClick={() => { setCustomerType("private"); updateField("businessType", "private"); }}
+                className="w-full p-4 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-all duration-200 text-right"
+              >
+                <div className="flex items-center gap-3">
+                  <UserIcon className="w-8 h-8 text-primary" />
+                  <div>
+                    <p className="font-bold text-text text-lg">לקוח פרטי</p>
+                    <p className="text-sm text-text-secondary">רכישה אישית של חלקים</p>
+                  </div>
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setCustomerType("business")}
+                className="w-full p-4 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-all duration-200 text-right"
+              >
+                <div className="flex items-center gap-3">
+                  <BuildingStorefrontIcon className="w-8 h-8 text-primary" />
+                  <div>
+                    <p className="font-bold text-text text-lg">לקוח עסקי</p>
+                    <p className="text-sm text-text-secondary">מוסך, חברת ליסינג, סוכנות רכב, פחחות וכו׳</p>
+                  </div>
+                </div>
+              </button>
+            </div>
+          )}
+
+          {/* Step 2: Registration form */}
+          {customerType && (
           <form onSubmit={handleSubmit} className="space-y-4">
+            <button
+              type="button"
+              onClick={() => setCustomerType("")}
+              className="text-sm text-primary hover:underline mb-2"
+            >
+              ← חזרה לבחירת סוג חשבון
+            </button>
+
+            <div className="bg-primary/5 rounded-lg p-3 mb-4">
+              <p className="text-sm font-medium text-primary text-center">
+                {customerType === "private" ? "👤 הרשמה כלקוח פרטי" : "🏢 הרשמה כלקוח עסקי"}
+              </p>
+            </div>
+
             <Input
               label="שם משתמש *"
               value={form.username}
@@ -120,13 +170,6 @@ export default function RegisterPage() {
               icon={<PhoneIcon className="w-5 h-5" />}
               required
             />
-
-            <div className="border-t border-border pt-4 mt-4">
-              <p className="text-sm text-text-secondary mb-3">
-                פרטים נוספים (לא חובה)
-              </p>
-            </div>
-
             <Input
               label="אימייל"
               type="email"
@@ -135,38 +178,53 @@ export default function RegisterPage() {
               placeholder="email@example.com"
               icon={<EnvelopeIcon className="w-5 h-5" />}
             />
-            <Input
-              label="שם עסק"
-              value={form.businessName}
-              onChange={(e) => updateField("businessName", e.target.value)}
-              placeholder="שם העסק"
-              icon={<BuildingStorefrontIcon className="w-5 h-5" />}
-            />
-            <Input
-              label="כתובת עסק"
-              value={form.businessAddress}
-              onChange={(e) => updateField("businessAddress", e.target.value)}
-              placeholder="כתובת העסק"
-              icon={<MapPinIcon className="w-5 h-5" />}
-            />
-            <Input
-              label='ח.פ.'
-              value={form.businessId}
-              onChange={(e) => updateField("businessId", e.target.value)}
-              placeholder="מספר חברה / עוסק"
-              icon={<IdentificationIcon className="w-5 h-5" />}
-            />
-            <Select
-              label="סוג לקוח"
-              value={form.businessType}
-              onChange={(e) => updateField("businessType", e.target.value)}
-              placeholder="בחר סוג"
-              options={[
-                { value: "garage", label: "מוסך" },
-                { value: "private", label: "פרטי" },
-                { value: "other", label: "אחר" },
-              ]}
-            />
+
+            {customerType === "business" && (
+              <>
+                <div className="border-t border-border pt-4 mt-4">
+                  <p className="text-sm font-medium text-text mb-3">פרטי העסק</p>
+                </div>
+                <Select
+                  label="סוג עסק *"
+                  value={form.businessType}
+                  onChange={(e) => updateField("businessType", e.target.value)}
+                  placeholder="בחר סוג עסק"
+                  options={[
+                    { value: "garage", label: "מוסך" },
+                    { value: "leasing", label: "חברת ליסינג" },
+                    { value: "dealer", label: "סוכנות רכב" },
+                    { value: "bodyshop", label: "פחחות / צבע" },
+                    { value: "insurance", label: "חברת ביטוח" },
+                    { value: "parts_store", label: "חנות חלפים" },
+                    { value: "fleet", label: "מנהל צי רכב" },
+                    { value: "other_business", label: "עסק אחר" },
+                  ]}
+                  required
+                />
+                <Input
+                  label="שם העסק *"
+                  value={form.businessName}
+                  onChange={(e) => updateField("businessName", e.target.value)}
+                  placeholder="שם העסק"
+                  icon={<BuildingStorefrontIcon className="w-5 h-5" />}
+                  required
+                />
+                <Input
+                  label="כתובת העסק"
+                  value={form.businessAddress}
+                  onChange={(e) => updateField("businessAddress", e.target.value)}
+                  placeholder="כתובת העסק"
+                  icon={<MapPinIcon className="w-5 h-5" />}
+                />
+                <Input
+                  label='ח.פ. / עוסק מורשה'
+                  value={form.businessId}
+                  onChange={(e) => updateField("businessId", e.target.value)}
+                  placeholder="מספר חברה / עוסק"
+                  icon={<IdentificationIcon className="w-5 h-5" />}
+                />
+              </>
+            )}
 
             {error && (
               <p className="text-sm text-danger text-center">{error}</p>
@@ -175,6 +233,7 @@ export default function RegisterPage() {
               הירשם
             </Button>
           </form>
+          )}
           <div className="mt-6 text-center">
             <p className="text-sm text-text-secondary">
               כבר יש לך חשבון?{" "}

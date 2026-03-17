@@ -17,7 +17,7 @@ export default function CatalogContent() {
   const [filterModel, setFilterModel] = useState(searchParams.get("model") || "");
   const [filterYear, setFilterYear] = useState(searchParams.get("year") || "");
   const [filterPosition, setFilterPosition] = useState(searchParams.get("position") || "");
-  const [filterStatus, setFilterStatus] = useState("");
+  const [filterStatus, setFilterStatus] = useState("במלאי");
 
   const [bumpers, setBumpers] = useState<Bumper[]>([]);
   const [total, setTotal] = useState(0);

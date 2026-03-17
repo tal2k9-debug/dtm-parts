@@ -186,7 +186,7 @@ export default function QuoteContent() {
 
                 {isLoggedIn && (
                   <div className="bg-success/10 text-success rounded-xl px-4 py-3 text-sm font-medium">
-                    מחובר בתור {(session?.user as Record<string, unknown>)?.name || "משתמש רשום"} — הפרטים ישלחו אוטומטית
+                    {`מחובר בתור ${(session?.user as Record<string, unknown>)?.name || "משתמש רשום"} — הפרטים ישלחו אוטומטית`}
                   </div>
                 )}
 
