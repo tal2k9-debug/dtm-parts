@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -11,13 +12,21 @@ import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import { CheckCircleIcon, PaperAirplaneIcon } from "@heroicons/react/24/outline";
 
-const MAKES = ["יונדאי", "קיה", "טויוטה", "מזדה", "ניסאן", "שברולט", "פולקסווגן", "סקודה", "הונדה", "פורד", "אחר"];
-const YEARS = Array.from({ length: 15 }, (_, i) => String(2024 - i));
+const FALLBACK_MAKES = ["יונדאי", "קיה", "טויוטה", "מזדה", "ניסאן", "שברולט", "פולקסווגן", "סקודה", "הונדה", "פורד", "אחר"];
+const FALLBACK_YEARS = Array.from({ length: 15 }, (_, i) => String(2024 - i));
 
 export default function QuoteContent() {
   const searchParams = useSearchParams();
+  const { data: session } = useSession();
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const [makes, setMakes] = useState<string[]>(FALLBACK_MAKES);
+  const [years, setYears] = useState<string[]>(FALLBACK_YEARS);
+  const [makesLoaded, setMakesLoaded] = useState(false);
+
+  const isLoggedIn = !!session?.user;
 
   const [form, setForm] = useState({
     name: "",
@@ -29,16 +38,95 @@ export default function QuoteContent() {
     notes: "",
   });
 
+  // Fetch makes from DB
+  useEffect(() => {
+    async function fetchMakes() {
+      try {
+        const res = await fetch("/api/bumpers/makes");
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length > 0) {
+            setMakes(data);
+          }
+        }
+      } catch {
+        // Keep fallback
+      } finally {
+        setMakesLoaded(true);
+      }
+    }
+    fetchMakes();
+  }, []);
+
+  // Fetch years when make and model change
+  useEffect(() => {
+    async function fetchYears() {
+      if (!form.carMake || !form.carModel) {
+        setYears(FALLBACK_YEARS);
+        return;
+      }
+      try {
+        const res = await fetch(
+          `/api/bumpers/years?make=${encodeURIComponent(form.carMake)}&model=${encodeURIComponent(form.carModel)}`
+        );
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length > 0) {
+            setYears(data);
+          } else {
+            setYears(FALLBACK_YEARS);
+          }
+        }
+      } catch {
+        setYears(FALLBACK_YEARS);
+      }
+    }
+    fetchYears();
+  }, [form.carMake, form.carModel]);
+
   const updateField = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
+    setError("");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setIsLoading(false);
-    setIsSubmitted(true);
+    setError("");
+
+    try {
+      const payload: Record<string, string | undefined> = {
+        carMake: form.carMake,
+        carModel: form.carModel,
+        carYear: form.carYear,
+        position: form.position,
+        notes: form.notes || undefined,
+      };
+
+      if (!isLoggedIn) {
+        payload.name = form.name;
+        payload.phone = form.phone;
+      }
+
+      const res = await fetch("/api/quotes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "שגיאה בשליחת הבקשה, נסו שוב");
+        return;
+      }
+
+      setIsSubmitted(true);
+    } catch {
+      setError("שגיאה בחיבור לשרת, נסו שוב מאוחר יותר");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (isSubmitted) {
@@ -86,20 +174,28 @@ export default function QuoteContent() {
 
             <Card padding="lg">
               <form onSubmit={handleSubmit} className="space-y-6">
-                <div>
-                  <h3 className="text-lg font-bold text-text mb-4">פרטים אישיים</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <Input label="שם מלא" placeholder="הזינו שם מלא" value={form.name} onChange={(e) => updateField("name", e.target.value)} required />
-                    <Input label="טלפון" placeholder="050-0000000" type="tel" value={form.phone} onChange={(e) => updateField("phone", e.target.value)} required />
+                {!isLoggedIn && (
+                  <div>
+                    <h3 className="text-lg font-bold text-text mb-4">פרטים אישיים</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <Input label="שם מלא" placeholder="הזינו שם מלא" value={form.name} onChange={(e) => updateField("name", e.target.value)} required />
+                      <Input label="טלפון" placeholder="050-0000000" type="tel" value={form.phone} onChange={(e) => updateField("phone", e.target.value)} required />
+                    </div>
                   </div>
-                </div>
+                )}
+
+                {isLoggedIn && (
+                  <div className="bg-success/10 text-success rounded-xl px-4 py-3 text-sm font-medium">
+                    מחובר בתור {(session?.user as Record<string, unknown>)?.name || "משתמש רשום"} — הפרטים ישלחו אוטומטית
+                  </div>
+                )}
 
                 <div>
                   <h3 className="text-lg font-bold text-text mb-4">פרטי הרכב</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <Select label="יצרן" placeholder="בחרו יצרן" value={form.carMake} onChange={(e) => updateField("carMake", e.target.value)} options={MAKES.map((m) => ({ value: m, label: m }))} required />
+                    <Select label="יצרן" placeholder="בחרו יצרן" value={form.carMake} onChange={(e) => updateField("carMake", e.target.value)} options={makes.map((m) => ({ value: m, label: m }))} required />
                     <Input label="דגם" placeholder="לדוגמה: i20, קורולה..." value={form.carModel} onChange={(e) => updateField("carModel", e.target.value)} required />
-                    <Select label="שנה" placeholder="בחרו שנה" value={form.carYear} onChange={(e) => updateField("carYear", e.target.value)} options={YEARS.map((y) => ({ value: y, label: y }))} required />
+                    <Select label="שנה" placeholder="בחרו שנה" value={form.carYear} onChange={(e) => updateField("carYear", e.target.value)} options={years.map((y) => ({ value: y, label: y }))} required />
                     <Select label="מיקום הטמבון" placeholder="קדמי / אחורי" value={form.position} onChange={(e) => updateField("position", e.target.value)} options={[{ value: "FRONT", label: "קדמי" }, { value: "REAR", label: "אחורי" }]} required />
                   </div>
                 </div>
@@ -114,6 +210,12 @@ export default function QuoteContent() {
                     onChange={(e) => updateField("notes", e.target.value)}
                   />
                 </div>
+
+                {error && (
+                  <div className="bg-danger/10 text-danger rounded-xl px-4 py-3 text-sm font-medium text-center">
+                    {error}
+                  </div>
+                )}
 
                 <Button type="submit" fullWidth size="lg" isLoading={isLoading} icon={<PaperAirplaneIcon className="w-5 h-5 rotate-180" />}>
                   שלחו בקשה
