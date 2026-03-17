@@ -9,7 +9,10 @@ export async function GET() {
       orderBy: { carMake: "asc" },
     });
 
-    const makes = results.map((r) => r.carMake);
+    // Filter out values that look like years/numbers (bad data from Monday)
+    const makes = results
+      .map((r) => r.carMake)
+      .filter((m) => m && !/^\+?\d{4}/.test(m) && !/^\d{4}\s*-\s*\d{4}$/.test(m) && m.length > 1);
 
     return NextResponse.json(makes);
   } catch (error) {
