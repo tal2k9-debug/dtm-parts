@@ -40,6 +40,7 @@ export async function POST(request: Request) {
           price: null,
           status: bumper.status,
           imageUrl: bumper.imageUrls[0] || null,
+          imageUrls: bumper.imageUrls,
         },
         create: {
           mondayItemId: bumper.mondayItemId,
@@ -51,6 +52,7 @@ export async function POST(request: Request) {
           price: null,
           status: bumper.status,
           imageUrl: bumper.imageUrls[0] || null,
+          imageUrls: bumper.imageUrls,
         },
       });
 
