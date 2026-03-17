@@ -120,7 +120,7 @@ export default function BumperCard({ bumper, isLoggedIn, isFavorited, onToggleFa
               ) : (
                 <span className="text-sm text-text-muted">צרו קשר למחיר</span>
               )}
-              <span className="text-sm text-primary font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center gap-1">
+              <span className="text-sm text-primary font-medium sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300 flex items-center gap-1">
                 לפרטים
                 <svg className="w-4 h-4 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

@@ -75,7 +75,10 @@ export default function Footer() {
             <ul className="space-y-3">
               <li className="flex items-center gap-3 text-sm text-white/70">
                 <PhoneIcon className="w-5 h-5 text-primary-light shrink-0" />
-                <a href={`tel:${ADMIN_PHONE_INTL}`} className="hover:text-white transition-colors">{ADMIN_PHONE}</a>
+                <div className="flex flex-col">
+                  <a href={`tel:${ADMIN_PHONE_INTL}`} className="hover:text-white transition-colors">{ADMIN_PHONE}</a>
+                  <a href="tel:+972526450237" className="hover:text-white transition-colors">052-6450237</a>
+                </div>
               </li>
               <li className="flex items-center gap-3 text-sm text-white/70">
                 <EnvelopeIcon className="w-5 h-5 text-primary-light shrink-0" />

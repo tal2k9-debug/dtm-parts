@@ -62,6 +62,46 @@ export function formatNewMessageNotification(data: {
 https://dtmparts.co.il/admin/requests/${data.requestId}`;
 }
 
+export async function sendWhatsApp(to: string, message: string) {
+  const accountSid = process.env.TWILIO_ACCOUNT_SID;
+  const authToken = process.env.TWILIO_AUTH_TOKEN;
+  const from = process.env.TWILIO_WHATSAPP_FROM;
+
+  if (!accountSid || !authToken || !from) {
+    console.warn("WhatsApp not configured — skipping send to", to);
+    return null;
+  }
+
+  try {
+    const twilio = await import("twilio");
+    const client = twilio.default(accountSid, authToken);
+    const result = await client.messages.create({
+      body: message,
+      from,
+      to: `whatsapp:${to}`,
+    });
+    return result;
+  } catch (error) {
+    console.error("WhatsApp send failed:", error);
+    return null;
+  }
+}
+
+export function formatStockAlertMessage(data: {
+  customerName: string;
+  carMake: string;
+  carModel: string;
+  carYear?: string;
+  bumperName: string;
+}) {
+  return `🟢 התראת מלאי — DTM PARTS
+שלום ${data.customerName}!
+הטמבון שחיפשת חזר למלאי:
+${data.bumperName}
+רכב: ${data.carMake} ${data.carModel}${data.carYear ? ` ${data.carYear}` : ""}
+כנס/י לאתר לפרטים נוספים או שלח/י לנו הודעה!`;
+}
+
 export function formatNewCustomerMessage(data: {
   name: string;
   phone: string;

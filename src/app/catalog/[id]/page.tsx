@@ -161,7 +161,7 @@ export default function CatalogDetailPage({ params }: { params: Promise<{ id: st
               </div>
               {/* Thumbnails */}
               {bumper.imageUrls && bumper.imageUrls.length > 1 && (
-                <div className="grid grid-cols-5 gap-2">
+                <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
                   {bumper.imageUrls.map((url: string, i: number) => (
                     <button
                       key={i}

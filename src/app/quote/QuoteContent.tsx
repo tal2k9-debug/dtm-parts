@@ -10,8 +10,9 @@ import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
+import Image from "next/image";
 import { CheckCircleIcon, PaperAirplaneIcon } from "@heroicons/react/24/outline";
-import { ADMIN_WHATSAPP_LINK } from "@/lib/constants";
+import { ADMIN_WHATSAPP_LINK, SITE_NAME } from "@/lib/constants";
 
 const FALLBACK_MAKES = ["יונדאי", "קיה", "טויוטה", "מזדה", "ניסאן", "שברולט", "פולקסווגן", "סקודה", "הונדה", "פורד", "אחר"];
 const FALLBACK_YEARS = Array.from({ length: 15 }, (_, i) => String(2024 - i));
@@ -145,8 +146,15 @@ export default function QuoteContent() {
             animate={{ opacity: 1, scale: 1 }}
             className="text-center max-w-md mx-auto px-4"
           >
-            <div className="w-20 h-20 mx-auto mb-6 bg-success/10 rounded-full flex items-center justify-center">
-              <CheckCircleIcon className="w-12 h-12 text-success" />
+            <Image
+              src="/images/logo.jpeg"
+              alt={SITE_NAME}
+              width={72}
+              height={72}
+              className="rounded-full mx-auto mb-4"
+            />
+            <div className="w-16 h-16 mx-auto mb-6 bg-success/10 rounded-full flex items-center justify-center">
+              <CheckCircleIcon className="w-10 h-10 text-success" />
             </div>
             <h2 className="text-2xl font-bold text-text mb-3">הבקשה נשלחה בהצלחה!</h2>
             <p className="text-text-secondary mb-8">

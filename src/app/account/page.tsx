@@ -4,9 +4,11 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import Card from "@/components/ui/Card";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import { SITE_NAME } from "@/lib/constants";
 import { ShoppingBagIcon, DocumentTextIcon, ChatBubbleLeftRightIcon, HeartIcon, BellIcon } from "@heroicons/react/24/outline";
 import { getRequestStatusLabel, getPositionLabel, formatDate } from "@/lib/utils";
 import { ADMIN_WHATSAPP_LINK } from "@/lib/constants";
@@ -69,42 +71,51 @@ export default function AccountPage() {
       <Header />
       <main className="pt-24 pb-16 min-h-screen bg-background">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-8">
-            <h1 className="text-3xl font-extrabold text-text">האזור שלי</h1>
-            <p className="text-text-secondary mt-1">שלום, {session.user?.name}!</p>
+          <div className="mb-8 flex items-center gap-4">
+            <Image
+              src="/images/logo.jpeg"
+              alt={SITE_NAME}
+              width={60}
+              height={60}
+              className="rounded-full"
+            />
+            <div>
+              <h1 className="text-3xl font-extrabold text-text">האזור שלי</h1>
+              <p className="text-text-secondary mt-1">שלום, {session.user?.name}!</p>
+            </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6 mb-8">
             <Link href="/catalog">
-              <Card hover className="text-center py-8 cursor-pointer">
-                <ShoppingBagIcon className="w-10 h-10 text-primary mx-auto mb-3" />
+              <Card hover className="text-center py-5 sm:py-8 cursor-pointer">
+                <ShoppingBagIcon className="w-8 h-8 sm:w-10 sm:h-10 text-primary mx-auto mb-2 sm:mb-3" />
                 <h3 className="font-bold text-text mb-1">קטלוג</h3>
                 <p className="text-sm text-text-secondary">עיינו במלאי</p>
               </Card>
             </Link>
             <Link href="/account/favorites">
-              <Card hover className="text-center py-8 cursor-pointer">
-                <HeartIcon className="w-10 h-10 text-red-500 mx-auto mb-3" />
+              <Card hover className="text-center py-5 sm:py-8 cursor-pointer">
+                <HeartIcon className="w-8 h-8 sm:w-10 sm:h-10 text-red-500 mx-auto mb-2 sm:mb-3" />
                 <h3 className="font-bold text-text mb-1">מועדפים</h3>
                 <p className="text-sm text-text-secondary">הטמבונים ששמרתם</p>
               </Card>
             </Link>
             <Link href="/account/alerts">
-              <Card hover className="text-center py-8 cursor-pointer">
-                <BellIcon className="w-10 h-10 text-yellow-500 mx-auto mb-3" />
+              <Card hover className="text-center py-5 sm:py-8 cursor-pointer">
+                <BellIcon className="w-8 h-8 sm:w-10 sm:h-10 text-yellow-500 mx-auto mb-2 sm:mb-3" />
                 <h3 className="font-bold text-text mb-1">התראות מלאי</h3>
                 <p className="text-sm text-text-secondary">עדכון כשנכנס למלאי</p>
               </Card>
             </Link>
             <Link href="/quote">
-              <Card hover className="text-center py-8 cursor-pointer">
-                <DocumentTextIcon className="w-10 h-10 text-primary mx-auto mb-3" />
+              <Card hover className="text-center py-5 sm:py-8 cursor-pointer">
+                <DocumentTextIcon className="w-8 h-8 sm:w-10 sm:h-10 text-primary mx-auto mb-2 sm:mb-3" />
                 <h3 className="font-bold text-text mb-1">בקשה חדשה</h3>
                 <p className="text-sm text-text-secondary">שלח בקשת מחיר</p>
               </Card>
             </Link>
             <a href={ADMIN_WHATSAPP_LINK} target="_blank" rel="noopener noreferrer">
-              <Card hover className="text-center py-8 cursor-pointer">
-                <ChatBubbleLeftRightIcon className="w-10 h-10 text-green-600 mx-auto mb-3" />
+              <Card hover className="text-center py-5 sm:py-8 cursor-pointer">
+                <ChatBubbleLeftRightIcon className="w-8 h-8 sm:w-10 sm:h-10 text-green-600 mx-auto mb-2 sm:mb-3" />
                 <h3 className="font-bold text-text mb-1">וואטסאפ</h3>
                 <p className="text-sm text-text-secondary">דברו איתנו ישירות</p>
               </Card>

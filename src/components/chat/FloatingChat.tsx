@@ -310,7 +310,7 @@ export default function FloatingChat() {
       <button
         onClick={() => { setIsOpen(!isOpen); if (!isOpen) setHasUnread(false); }}
         className={cn(
-          "fixed bottom-6 left-6 z-50 w-14 h-14 rounded-full shadow-lg",
+          "fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full shadow-lg",
           "flex items-center justify-center transition-all duration-300",
           "hover:scale-110 active:scale-95",
           isOpen ? "bg-gray-600 rotate-0" : "bg-accent hover:bg-accent/90"
@@ -333,7 +333,7 @@ export default function FloatingChat() {
       <div
         className={cn(
           "fixed z-50 transition-all duration-300 ease-in-out",
-          "bottom-24 left-6 w-[350px] h-[500px] rounded-2xl",
+          "bottom-24 right-6 w-[350px] h-[500px] rounded-2xl",
           "max-sm:bottom-0 max-sm:left-0 max-sm:right-0 max-sm:top-0 max-sm:w-full max-sm:h-full max-sm:rounded-none",
           isOpen ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 translate-y-4 pointer-events-none"
         )}

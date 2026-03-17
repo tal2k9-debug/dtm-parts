@@ -3,6 +3,7 @@ import { fetchBumpersFromMonday } from "@/lib/monday";
 import { prisma } from "@/lib/prisma";
 import { withRetry, mondayCircuit } from "@/lib/resilience";
 import { logger } from "@/lib/logger";
+import { notifyAdmin, sendWhatsApp, formatStockAlertMessage } from "@/lib/whatsapp";
 
 // GET /api/monday/sync — Sync bumpers from Monday.com
 // Can be called by cron job or admin manual trigger
@@ -33,12 +34,33 @@ export async function GET(request: Request) {
       })
     );
 
+    // Get old statuses before upserting (for stock alert comparison)
+    const existingBumpers = await prisma.bumperCache.findMany({
+      select: { mondayItemId: true, status: true, carMake: true, carModel: true, carYear: true, name: true },
+    });
+    const oldStatusMap = new Map(existingBumpers.map((b) => [b.mondayItemId, b]));
+
     // Upsert each bumper into BumperCache
     let synced = 0;
     let errors = 0;
+    const backInStock: Array<{ mondayItemId: string; name: string; carMake: string; carModel: string; carYear: string }> = [];
 
     for (const bumper of bumpers) {
       try {
+        // Check if status changed to "במלאי" or "כן"
+        const old = oldStatusMap.get(bumper.mondayItemId);
+        const isNowInStock = bumper.status === "במלאי" || bumper.status === "כן";
+        const wasOutOfStock = old && old.status !== "במלאי" && old.status !== "כן";
+        if (isNowInStock && wasOutOfStock) {
+          backInStock.push({
+            mondayItemId: bumper.mondayItemId,
+            name: bumper.catalogNumber,
+            carMake: bumper.carMake,
+            carModel: bumper.carModel,
+            carYear: bumper.carYear,
+          });
+        }
+
         await prisma.bumperCache.upsert({
           where: { mondayItemId: bumper.mondayItemId },
           update: {
@@ -72,8 +94,64 @@ export async function GET(request: Request) {
       }
     }
 
-    await logger.info("monday_sync", `סנכרון הושלם: ${synced} פריטים, ${errors} שגיאות`, {
-      total: bumpers.length, synced, errors,
+    // Process stock alerts for bumpers that came back in stock
+    let alertsSent = 0;
+    if (backInStock.length > 0) {
+      try {
+        for (const bumper of backInStock) {
+          // Find matching active alerts
+          const matchingAlerts = await prisma.stockAlert.findMany({
+            where: {
+              active: true,
+              carMake: bumper.carMake,
+              carModel: bumper.carModel,
+              ...(bumper.carYear ? { OR: [{ carYear: bumper.carYear }, { carYear: null }] } : {}),
+            },
+            include: { user: { select: { name: true, phone: true } } },
+          });
+
+          for (const alert of matchingAlerts) {
+            try {
+              // Send WhatsApp to customer
+              if (alert.user.phone) {
+                const phone = alert.user.phone.replace(/^0/, "+972").replace(/-/g, "");
+                await sendWhatsApp(
+                  phone,
+                  formatStockAlertMessage({
+                    customerName: alert.user.name,
+                    carMake: bumper.carMake,
+                    carModel: bumper.carModel,
+                    carYear: bumper.carYear,
+                    bumperName: bumper.name,
+                  })
+                );
+                alertsSent++;
+              }
+
+              // Deactivate alert after notification
+              await prisma.stockAlert.update({
+                where: { id: alert.id },
+                data: { active: false },
+              });
+            } catch { /* non-blocking per alert */ }
+          }
+        }
+
+        // Notify admin about alerts sent
+        if (alertsSent > 0) {
+          try {
+            await notifyAdmin(
+              `📦 ${backInStock.length} טמבונים חזרו למלאי → נשלחו ${alertsSent} התראות ללקוחות`
+            );
+          } catch { /* non-blocking */ }
+        }
+      } catch (err) {
+        console.error("Stock alert processing error:", err);
+      }
+    }
+
+    await logger.info("monday_sync", `סנכרון הושלם: ${synced} פריטים, ${errors} שגיאות, ${alertsSent} התראות מלאי`, {
+      total: bumpers.length, synced, errors, alertsSent, backInStock: backInStock.length,
     });
 
     return NextResponse.json({
