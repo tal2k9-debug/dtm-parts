@@ -25,6 +25,7 @@ model User {
   requests        QuoteRequest[]
   messages        Message[]
   favorites       Favorite[]
+  stockAlerts     StockAlert[]
 }
 
 enum Role {
@@ -92,6 +93,18 @@ model ImageCache {
   assetId   String   @unique
   publicUrl String
   expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model StockAlert {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  carMake   String
+  carModel  String
+  carYear   String?
+  position  String?
+  active    Boolean  @default(true)
   createdAt DateTime @default(now())
 }
 
