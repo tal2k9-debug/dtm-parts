@@ -1,8 +1,6 @@
 "use client";
 
 import { motion } from "framer-motion";
-import Image from "next/image";
-import { SITE_NAME } from "@/lib/constants";
 import VehicleSelector from "./VehicleSelector";
 
 export default function HeroSection() {
@@ -44,20 +42,11 @@ export default function HeroSection() {
               </span>
             </motion.div>
 
-            <div className="flex items-center gap-4 mb-6">
-              <Image
-                src="/images/logo.jpeg"
-                alt={SITE_NAME}
-                width={72}
-                height={72}
-                className="rounded-full border-2 border-white/30 shadow-lg"
-              />
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-tight">
-                הטמבון שאתם צריכים
-                <br />
-                <span className="text-primary-light">במחיר הנכון</span>
-              </h1>
-            </div>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-tight mb-6">
+              הטמבון שאתם צריכים
+              <br />
+              <span className="text-primary-light">במחיר הנכון</span>
+            </h1>
 
             <p className="text-lg sm:text-xl text-white/70 leading-relaxed mb-8 max-w-lg">
               מגוון רחב של טמבונים, פגושים ומגנים במלאי, לכל יצרני הרכב.

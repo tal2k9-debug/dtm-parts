@@ -4,11 +4,9 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import Card from "@/components/ui/Card";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import { SITE_NAME } from "@/lib/constants";
 import { ShoppingBagIcon, DocumentTextIcon, ChatBubbleLeftRightIcon, HeartIcon, BellIcon } from "@heroicons/react/24/outline";
 import { getRequestStatusLabel, getPositionLabel, formatDate } from "@/lib/utils";
 import { ADMIN_WHATSAPP_LINK } from "@/lib/constants";
@@ -71,18 +69,9 @@ export default function AccountPage() {
       <Header />
       <main className="pt-24 pb-16 min-h-screen bg-background">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-8 flex items-center gap-4">
-            <Image
-              src="/images/logo.jpeg"
-              alt={SITE_NAME}
-              width={60}
-              height={60}
-              className="rounded-full"
-            />
-            <div>
-              <h1 className="text-3xl font-extrabold text-text">האזור שלי</h1>
-              <p className="text-text-secondary mt-1">שלום, {session.user?.name}!</p>
-            </div>
+          <div className="mb-8">
+            <h1 className="text-3xl font-extrabold text-text">האזור שלי</h1>
+            <p className="text-text-secondary mt-1">שלום, {session.user?.name}!</p>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6 mb-8">
             <Link href="/catalog">

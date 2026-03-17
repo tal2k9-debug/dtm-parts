@@ -44,13 +44,15 @@ export default function Header() {
         <div className="flex items-center justify-between h-16 sm:h-20">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3 shrink-0">
-            <Image
-              src="/images/logo.jpeg"
-              alt={SITE_NAME}
-              width={56}
-              height={56}
-              className="rounded-full"
-            />
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden shrink-0 ring-2 ring-white/20">
+              <Image
+                src="/images/logo.jpeg"
+                alt={SITE_NAME}
+                width={64}
+                height={64}
+                className="w-full h-full object-cover"
+              />
+            </div>
             <div className="hidden sm:block">
               <h1
                 className={cn(
