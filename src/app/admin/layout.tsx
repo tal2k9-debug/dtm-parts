@@ -1,5 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -17,7 +20,6 @@ import {
   XMarkIcon,
   BellIcon,
 } from "@heroicons/react/24/outline";
-import { useState } from "react";
 
 const navIcons: Record<string, React.ReactNode> = {
   "/admin": <ChartBarIcon className="w-5 h-5" />,
@@ -34,7 +36,33 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { data: session, status } = useSession();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/login");
+    } else if (status === "authenticated") {
+      const role = (session?.user as Record<string, unknown> | undefined)?.role;
+      if (role !== "ADMIN") {
+        router.push("/");
+      }
+    }
+  }, [status, session, router]);
+
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p className="text-gray-500">טוען...</p>
+      </div>
+    );
+  }
+
+  const role = (session?.user as Record<string, unknown> | undefined)?.role;
+  if (!session || role !== "ADMIN") {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex">

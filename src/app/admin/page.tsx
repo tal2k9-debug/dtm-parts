@@ -37,6 +37,7 @@ interface RecentRequest {
 export default function AdminDashboard() {
   const [syncing, setSyncing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [stats, setStats] = useState<StatsData>({
     pendingRequests: 0,
     monthlyRequests: 0,
@@ -52,13 +53,21 @@ export default function AdminDashboard() {
   const fetchStats = async () => {
     try {
       const res = await fetch("/api/admin/stats");
+      if (res.status === 403) {
+        setError("אין הרשאה. יש להתחבר כאדמין.");
+        setLoading(false);
+        return;
+      }
       const data = await res.json();
       if (data.success) {
         setStats(data.stats);
         setRecentRequests(data.recentRequests);
+      } else {
+        setError(data.error || "שגיאה בטעינת הנתונים");
       }
-    } catch (error) {
-      console.error("Failed to fetch stats:", error);
+    } catch (err) {
+      console.error("Failed to fetch stats:", err);
+      setError("שגיאה בטעינת הנתונים");
     } finally {
       setLoading(false);
     }
