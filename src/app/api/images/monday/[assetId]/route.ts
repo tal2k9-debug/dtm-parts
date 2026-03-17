@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+export const runtime = "edge";
+
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ assetId: string }> }
@@ -19,7 +21,6 @@ export async function GET(
   }
 
   try {
-    // Get signed URL from Monday
     const response = await fetch("https://api.monday.com/v2", {
       method: "POST",
       headers: {
@@ -45,20 +46,12 @@ export async function GET(
       return NextResponse.json({ error: "Asset not found" }, { status: 404 });
     }
 
-    // Fetch the actual image and stream it back
-    const imageResponse = await fetch(publicUrl);
-    if (!imageResponse.ok) {
-      return NextResponse.json({ error: "Image fetch failed" }, { status: 502 });
-    }
-
-    const contentType = imageResponse.headers.get("content-type") || "image/jpeg";
-    const imageBuffer = await imageResponse.arrayBuffer();
-
-    return new NextResponse(imageBuffer, {
-      status: 200,
+    // Redirect to the signed S3 URL
+    return new Response(null, {
+      status: 302,
       headers: {
-        "Content-Type": contentType,
-        "Cache-Control": "public, max-age=86400, s-maxage=86400",
+        Location: publicUrl,
+        "Cache-Control": "public, max-age=3600, s-maxage=3600",
       },
     });
   } catch {
