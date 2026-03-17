@@ -87,6 +87,14 @@ model Favorite {
   @@unique([userId, bumperId])
 }
 
+model ImageCache {
+  id        String   @id @default(cuid())
+  assetId   String   @unique
+  publicUrl String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
 model BumperCache {
   id           String    @id @default(cuid())
   mondayItemId String    @unique
