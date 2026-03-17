@@ -57,6 +57,7 @@ export const ADMIN_NAV_LINKS = [
   { href: "/admin/customers", label: "לקוחות" },
   { href: "/admin/inventory", label: "מלאי" },
   { href: "/admin/chat", label: "צ׳אט" },
+  { href: "/admin/analytics", label: "אנליטיקס" },
   { href: "/admin/monitoring", label: "ניטור" },
   { href: "/admin/settings", label: "הגדרות" },
 ];

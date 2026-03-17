@@ -1,0 +1,207 @@
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { prisma } from "@/lib/prisma";
+
+export async function GET() {
+  try {
+    const session = await getServerSession(authOptions);
+    const role = (session?.user as Record<string, unknown>)?.role as string;
+    if (role !== "ADMIN") {
+      return NextResponse.json({ error: "אין הרשאה" }, { status: 403 });
+    }
+
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+    // Run all queries in parallel
+    const [
+      // Quote request stats
+      totalRequests,
+      pendingRequests,
+      requestsThisMonth,
+      requestsThisWeek,
+      requestsToday,
+
+      // Customer stats
+      totalCustomers,
+      customersThisMonth,
+
+      // Bumper view stats
+      viewsToday,
+      viewsThisWeek,
+      viewsThisMonth,
+
+      // Top viewed bumpers (last 30 days)
+      topViewedRaw,
+
+      // Top requested bumpers (by quote requests)
+      topRequestedRaw,
+
+      // Top favorited bumpers
+      topFavoritedRaw,
+
+      // Recent quote requests
+      recentRequests,
+
+      // Requests by status
+      requestsByStatus,
+
+      // Daily views for chart (last 14 days)
+      dailyViewsRaw,
+
+      // Daily requests for chart (last 14 days)
+      dailyRequestsRaw,
+    ] = await Promise.all([
+      prisma.quoteRequest.count(),
+      prisma.quoteRequest.count({ where: { status: "PENDING" } }),
+      prisma.quoteRequest.count({ where: { createdAt: { gte: monthAgo } } }),
+      prisma.quoteRequest.count({ where: { createdAt: { gte: weekAgo } } }),
+      prisma.quoteRequest.count({ where: { createdAt: { gte: todayStart } } }),
+
+      prisma.user.count({ where: { role: { not: "ADMIN" } } }),
+      prisma.user.count({ where: { role: { not: "ADMIN" }, createdAt: { gte: monthAgo } } }),
+
+      prisma.bumperView.count({ where: { createdAt: { gte: todayStart } } }),
+      prisma.bumperView.count({ where: { createdAt: { gte: weekAgo } } }),
+      prisma.bumperView.count({ where: { createdAt: { gte: monthAgo } } }),
+
+      prisma.bumperView.groupBy({
+        by: ["bumperId"],
+        _count: { bumperId: true },
+        where: { createdAt: { gte: monthAgo } },
+        orderBy: { _count: { bumperId: "desc" } },
+        take: 10,
+      }),
+
+      prisma.quoteRequest.groupBy({
+        by: ["carMake", "carModel"],
+        _count: { id: true },
+        orderBy: { _count: { id: "desc" } },
+        take: 10,
+      }),
+
+      prisma.favorite.groupBy({
+        by: ["bumperId"],
+        _count: { bumperId: true },
+        orderBy: { _count: { bumperId: "desc" } },
+        take: 10,
+      }),
+
+      prisma.quoteRequest.findMany({
+        take: 10,
+        orderBy: { createdAt: "desc" },
+        include: { user: { select: { name: true, phone: true } } },
+      }),
+
+      prisma.quoteRequest.groupBy({
+        by: ["status"],
+        _count: { id: true },
+      }),
+
+      prisma.$queryRaw`
+        SELECT DATE(\"createdAt\") as date, COUNT(*)::int as count
+        FROM "BumperView"
+        WHERE "createdAt" >= ${weekAgo}
+        GROUP BY DATE("createdAt")
+        ORDER BY date ASC
+      ` as Promise<Array<{ date: Date; count: number }>>,
+
+      prisma.$queryRaw`
+        SELECT DATE(\"createdAt\") as date, COUNT(*)::int as count
+        FROM "QuoteRequest"
+        WHERE "createdAt" >= ${weekAgo}
+        GROUP BY DATE("createdAt")
+        ORDER BY date ASC
+      ` as Promise<Array<{ date: Date; count: number }>>,
+    ]);
+
+    // Enrich top viewed bumpers with names from BumperCache
+    const topViewedIds = topViewedRaw.map((v) => v.bumperId);
+    const bumperNames = topViewedIds.length > 0
+      ? await prisma.bumperCache.findMany({
+          where: { mondayItemId: { in: topViewedIds } },
+          select: { mondayItemId: true, name: true, carMake: true, carModel: true },
+        })
+      : [];
+    const bumperNameMap = Object.fromEntries(bumperNames.map((b) => [b.mondayItemId, b]));
+
+    const topViewed = topViewedRaw.map((v) => ({
+      bumperId: v.bumperId,
+      views: v._count.bumperId,
+      name: bumperNameMap[v.bumperId]?.name || v.bumperId,
+      carMake: bumperNameMap[v.bumperId]?.carMake || "",
+      carModel: bumperNameMap[v.bumperId]?.carModel || "",
+    }));
+
+    // Enrich top favorited
+    const topFavIds = topFavoritedRaw.map((f) => f.bumperId);
+    const favBumperNames = topFavIds.length > 0
+      ? await prisma.bumperCache.findMany({
+          where: { mondayItemId: { in: topFavIds } },
+          select: { mondayItemId: true, name: true },
+        })
+      : [];
+    const favNameMap = Object.fromEntries(favBumperNames.map((b) => [b.mondayItemId, b.name]));
+
+    const topFavorited = topFavoritedRaw.map((f) => ({
+      bumperId: f.bumperId,
+      favorites: f._count.bumperId,
+      name: favNameMap[f.bumperId] || f.bumperId,
+    }));
+
+    const topRequested = topRequestedRaw.map((r) => ({
+      carMake: r.carMake,
+      carModel: r.carModel,
+      count: r._count.id,
+    }));
+
+    const statusMap = Object.fromEntries(
+      requestsByStatus.map((s) => [s.status, s._count.id])
+    );
+
+    return NextResponse.json({
+      overview: {
+        totalRequests,
+        pendingRequests,
+        requestsToday,
+        requestsThisWeek,
+        requestsThisMonth,
+        totalCustomers,
+        customersThisMonth,
+        viewsToday,
+        viewsThisWeek,
+        viewsThisMonth,
+      },
+      requestsByStatus: {
+        pending: statusMap["PENDING"] || 0,
+        quoted: statusMap["QUOTED"] || 0,
+        closed: statusMap["CLOSED"] || 0,
+        cancelled: statusMap["CANCELLED"] || 0,
+      },
+      topViewed,
+      topRequested,
+      topFavorited,
+      recentRequests: recentRequests.map((r) => ({
+        id: r.id,
+        carMake: r.carMake,
+        carModel: r.carModel,
+        carYear: r.carYear,
+        position: r.position,
+        status: r.status,
+        customerName: r.user?.name || r.guestName || "אנונימי",
+        customerPhone: r.user?.phone || r.guestPhone || "",
+        createdAt: r.createdAt,
+      })),
+      charts: {
+        dailyViews: dailyViewsRaw,
+        dailyRequests: dailyRequestsRaw,
+      },
+    });
+  } catch (error) {
+    console.error("Analytics error:", error);
+    return NextResponse.json({ error: "שגיאה בטעינת נתונים" }, { status: 500 });
+  }
+}

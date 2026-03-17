@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { SITE_NAME, ADMIN_NAV_LINKS } from "@/lib/constants";
 import {
   ChartBarIcon,
+  PresentationChartLineIcon,
   ClipboardDocumentListIcon,
   UsersIcon,
   CubeIcon,
@@ -28,6 +29,7 @@ const navIcons: Record<string, React.ReactNode> = {
   "/admin/customers": <UsersIcon className="w-5 h-5" />,
   "/admin/inventory": <CubeIcon className="w-5 h-5" />,
   "/admin/chat": <ChatBubbleLeftRightIcon className="w-5 h-5" />,
+  "/admin/analytics": <PresentationChartLineIcon className="w-5 h-5" />,
   "/admin/monitoring": <ShieldCheckIcon className="w-5 h-5" />,
   "/admin/settings": <Cog6ToothIcon className="w-5 h-5" />,
 };

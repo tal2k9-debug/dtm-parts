@@ -36,6 +36,16 @@ export default function CatalogDetailPage({ params }: { params: Promise<{ id: st
       .finally(() => setLoading(false));
   }, [id]);
 
+  // Track bumper view
+  useEffect(() => {
+    if (!bumper) return;
+    fetch("/api/tracking", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "bumper_view", bumperId: bumper.mondayItemId }),
+    }).catch(() => {});
+  }, [bumper]);
+
   // Check if bumper is favorited
   useEffect(() => {
     if (!isLoggedIn || !bumper) return;

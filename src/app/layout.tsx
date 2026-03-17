@@ -3,6 +3,7 @@ import { Heebo } from "next/font/google";
 import Providers from "./Providers";
 import FloatingChat from "@/components/chat/FloatingChat";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import GoogleAnalytics from "@/components/GoogleAnalytics";
 import "./globals.css";
 
 const heebo = Heebo({
@@ -32,6 +33,7 @@ export default function RootLayout({
   return (
     <html lang="he" dir="rtl" className={heebo.variable}>
       <body className="font-sans antialiased">
+        <GoogleAnalytics />
         <Providers>
           <ErrorBoundary>
             {children}

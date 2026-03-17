@@ -142,6 +142,30 @@ model HealthCheck {
   @@index([createdAt])
 }
 
+model BumperView {
+  id           String   @id @default(cuid())
+  bumperId     String   // mondayItemId from BumperCache
+  userId       String?  // null = anonymous visitor
+  sessionId    String?  // for anonymous tracking
+  createdAt    DateTime @default(now())
+
+  @@index([bumperId, createdAt])
+  @@index([userId, createdAt])
+  @@index([createdAt])
+}
+
+model PageView {
+  id        String   @id @default(cuid())
+  path      String
+  userId    String?
+  sessionId String?
+  referrer  String?
+  createdAt DateTime @default(now())
+
+  @@index([path, createdAt])
+  @@index([createdAt])
+}
+
 model BumperCache {
   id           String    @id @default(cuid())
   mondayItemId String    @unique
