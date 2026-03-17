@@ -9,10 +9,15 @@ import {
   Bars3Icon,
   XMarkIcon,
   PhoneIcon,
+  UserPlusIcon,
+  UserIcon,
 } from "@heroicons/react/24/outline";
 import Button from "@/components/ui/Button";
+import { useSession } from "next-auth/react";
 
 export default function Header() {
+  const { data: session } = useSession();
+  const isLoggedIn = !!session?.user;
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -96,6 +101,19 @@ export default function Header() {
               <PhoneIcon className="w-4 h-4" />
               <span>התקשרו אלינו</span>
             </a>
+            {isLoggedIn ? (
+              <Link href="/account">
+                <Button size="sm" variant={isScrolled ? "outline" : "accent"} icon={<UserIcon className="w-4 h-4" />}>
+                  החשבון שלי
+                </Button>
+              </Link>
+            ) : (
+              <Link href="/register">
+                <Button size="sm" variant={isScrolled ? "outline" : "accent"} icon={<UserPlusIcon className="w-4 h-4" />}>
+                  הרשמה — 10% הנחה
+                </Button>
+              </Link>
+            )}
             <Link href="/quote">
               <Button size="sm" variant={isScrolled ? "primary" : "accent"}>
                 בקשת מחיר
@@ -151,6 +169,27 @@ export default function Header() {
             <PhoneIcon className="w-5 h-5" />
             התקשרו אלינו
           </a>
+          <div className="border-t border-border pt-3 mt-2">
+            {isLoggedIn ? (
+              <Link
+                href="/account"
+                className="flex items-center gap-2 px-4 py-3 rounded-xl text-primary font-bold"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <UserIcon className="w-5 h-5" />
+                החשבון שלי
+              </Link>
+            ) : (
+              <Link
+                href="/register"
+                className="flex items-center gap-2 px-4 py-3 rounded-xl bg-accent/10 text-accent font-bold"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <UserPlusIcon className="w-5 h-5" />
+                הירשם וקבל 10% הנחה!
+              </Link>
+            )}
+          </div>
         </nav>
       </div>
     </header>

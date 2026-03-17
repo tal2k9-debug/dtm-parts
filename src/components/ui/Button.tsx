@@ -3,7 +3,7 @@
 import { cn } from "@/lib/utils";
 import { forwardRef } from "react";
 
-type ButtonVariant = "primary" | "secondary" | "accent" | "ghost" | "whatsapp" | "danger";
+type ButtonVariant = "primary" | "secondary" | "accent" | "ghost" | "whatsapp" | "danger" | "outline";
 type ButtonSize = "sm" | "md" | "lg" | "xl";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -27,6 +27,8 @@ const variantStyles: Record<ButtonVariant, string> = {
     "bg-whatsapp text-white hover:bg-whatsapp-dark shadow-md hover:shadow-lg",
   danger:
     "bg-danger text-white hover:bg-red-700 shadow-md",
+  outline:
+    "bg-transparent text-accent border-2 border-accent hover:bg-accent hover:text-white",
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
