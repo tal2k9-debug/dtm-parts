@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { NAV_LINKS, SITE_NAME } from "@/lib/constants";
+import { NAV_LINKS, SITE_NAME, ADMIN_PHONE_INTL } from "@/lib/constants";
 import {
   Bars3Icon,
   XMarkIcon,
@@ -66,7 +66,7 @@ export default function Header() {
                   isScrolled ? "text-text-secondary" : "text-white/70"
                 )}
               >
-                טמבונים ופגושים
+                טמבונים / פגושים / מגנים
               </p>
             </div>
           </Link>
@@ -92,7 +92,7 @@ export default function Header() {
           {/* CTA + Mobile Toggle */}
           <div className="flex items-center gap-3">
             <a
-              href="tel:+972XXXXXXXXX"
+              href={`tel:${ADMIN_PHONE_INTL}`}
               className={cn(
                 "hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all",
                 isScrolled
@@ -199,7 +199,7 @@ export default function Header() {
             </Link>
           ))}
           <a
-            href="tel:+972XXXXXXXXX"
+            href={`tel:${ADMIN_PHONE_INTL}`}
             className="flex items-center gap-2 px-4 py-3 rounded-xl text-primary font-medium"
           >
             <PhoneIcon className="w-5 h-5" />

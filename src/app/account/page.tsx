@@ -9,6 +9,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { ShoppingBagIcon, DocumentTextIcon, ChatBubbleLeftRightIcon, HeartIcon, BellIcon } from "@heroicons/react/24/outline";
 import { getRequestStatusLabel, getPositionLabel, formatDate } from "@/lib/utils";
+import { ADMIN_WHATSAPP_LINK } from "@/lib/constants";
 
 interface QuoteRequest {
   id: string;
@@ -101,7 +102,7 @@ export default function AccountPage() {
                 <p className="text-sm text-text-secondary">שלח בקשת מחיר</p>
               </Card>
             </Link>
-            <a href="https://wa.me/972501234567" target="_blank">
+            <a href={ADMIN_WHATSAPP_LINK} target="_blank" rel="noopener noreferrer">
               <Card hover className="text-center py-8 cursor-pointer">
                 <ChatBubbleLeftRightIcon className="w-10 h-10 text-green-600 mx-auto mb-3" />
                 <h3 className="font-bold text-text mb-1">וואטסאפ</h3>

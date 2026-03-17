@@ -35,22 +35,24 @@ enum Role {
 }
 
 model QuoteRequest {
-  id          String    @id @default(cuid())
-  userId      String?
-  user        User?     @relation(fields: [userId], references: [id])
-  guestName   String?
-  guestPhone  String?
-  carMake     String
-  carModel    String
-  carYear     String
-  position    Position
-  notes       String?
-  imageUrl    String?
-  status      Status    @default(PENDING)
-  quotedPrice Float?
-  createdAt   DateTime  @default(now())
-  closedAt    DateTime?
-  messages    Message[]
+  id             String    @id @default(cuid())
+  userId         String?
+  user           User?     @relation(fields: [userId], references: [id])
+  guestName      String?
+  guestPhone     String?
+  carMake        String
+  carModel       String
+  carYear        String
+  position       Position
+  licensePlate   String?   // מספר רכב
+  catalogNumber  String?   // מק"ט מהקטלוג (אם הבקשה הגיעה מעמוד מוצר)
+  notes          String?
+  imageUrl       String?
+  status         Status    @default(PENDING)
+  quotedPrice    Float?
+  createdAt      DateTime  @default(now())
+  closedAt       DateTime?
+  messages       Message[]
 }
 
 enum Position {
@@ -66,16 +68,18 @@ enum Status {
 }
 
 model Message {
-  id         String       @id @default(cuid())
-  requestId  String
-  request    QuoteRequest @relation(fields: [requestId], references: [id])
+  id         String        @id @default(cuid())
+  requestId  String?       // null = free conversation (not tied to a request)
+  request    QuoteRequest? @relation(fields: [requestId], references: [id])
   userId     String?
-  user       User?        @relation(fields: [userId], references: [id])
+  user       User?         @relation(fields: [userId], references: [id])
   senderRole String
   content    String?
   imageUrl   String?
   readAt     DateTime?
-  createdAt  DateTime     @default(now())
+  createdAt  DateTime      @default(now())
+
+  @@index([userId, requestId, createdAt])
 }
 
 model Favorite {
@@ -106,6 +110,36 @@ model StockAlert {
   position  String?
   active    Boolean  @default(true)
   createdAt DateTime @default(now())
+}
+
+model SystemEvent {
+  id          String   @id @default(cuid())
+  level       String   // "info" | "warn" | "error" | "critical"
+  source      String   // "monday_sync" | "whatsapp" | "auth" | "api" | "db" | "health"
+  message     String
+  details     String?  // JSON stringified extra data
+  resolved    Boolean  @default(false)
+  resolvedAt  DateTime?
+  autoHealed  Boolean  @default(false) // was it auto-fixed?
+  healAction  String?  // what self-heal action was taken
+  createdAt   DateTime @default(now())
+
+  @@index([level, createdAt])
+  @@index([source, createdAt])
+  @@index([resolved, createdAt])
+}
+
+model HealthCheck {
+  id          String   @id @default(cuid())
+  status      String   // "healthy" | "degraded" | "down"
+  dbOk        Boolean
+  mondayOk    Boolean
+  pusherOk    Boolean
+  details     String?  // JSON
+  responseMs  Int
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
 }
 
 model BumperCache {

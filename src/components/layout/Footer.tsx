@@ -38,11 +38,11 @@ export default function Footer() {
               />
               <div>
                 <h3 className="text-lg font-bold">{SITE_NAME}</h3>
-                <p className="text-sm text-white/60">טמבונים ופגושים</p>
+                <p className="text-sm text-white/60">טמבונים / פגושים / מגנים</p>
               </div>
             </div>
             <p className="text-white/70 text-sm leading-relaxed">
-              מגוון רחב של טמבונים ופגושים משומשים מייבוא לכל יצרני הרכב.
+              מגוון רחב של טמבונים, פגושים ומגנים משומשים מייבוא לכל יצרני הרכב.
               מחירים תחרותיים, שירות אישי ומשלוח מהיר לכל הארץ.
             </p>
           </div>

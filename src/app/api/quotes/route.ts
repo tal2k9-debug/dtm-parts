@@ -10,7 +10,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    const { carMake, carModel, carYear, position, notes, name, phone, imageUrl } = body;
+    const { carMake, carModel, carYear, position, notes, name, phone, imageUrl, licensePlate, catalogNumber } = body;
 
     // Validation
     if (!carMake || !carModel || !carYear || !position) {
@@ -40,6 +40,14 @@ export async function POST(request: Request) {
       );
     }
 
+    // License plate required when no catalogNumber (general request, not from catalog)
+    if (!catalogNumber && !licensePlate) {
+      return NextResponse.json(
+        { error: "נא למלא מספר רכב" },
+        { status: 400 }
+      );
+    }
+
     // Save to database
     const quoteRequest = await prisma.quoteRequest.create({
       data: {
@@ -50,6 +58,8 @@ export async function POST(request: Request) {
         carModel,
         carYear,
         position: position as Position,
+        licensePlate: licensePlate || null,
+        catalogNumber: catalogNumber || null,
         notes: notes || null,
         imageUrl: imageUrl || null,
         status: Status.PENDING,
@@ -71,6 +81,8 @@ export async function POST(request: Request) {
         carModel,
         carYear,
         position,
+        licensePlate: licensePlate || undefined,
+        catalogNumber: catalogNumber || undefined,
         notes,
         requestId: quoteRequest.id,
       });

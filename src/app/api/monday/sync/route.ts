@@ -1,26 +1,37 @@
 import { NextResponse } from "next/server";
 import { fetchBumpersFromMonday } from "@/lib/monday";
 import { prisma } from "@/lib/prisma";
+import { withRetry, mondayCircuit } from "@/lib/resilience";
+import { logger } from "@/lib/logger";
 
 // GET /api/monday/sync — Sync bumpers from Monday.com
 // Can be called by cron job or admin manual trigger
 export async function GET(request: Request) {
   try {
-    // Simple auth check via header for cron jobs
+    // Auth: cron secret OR admin session
     const authHeader = request.headers.get("authorization");
     const cronSecret = process.env.CRON_SECRET;
-
-    // Allow if: no cron secret set (dev), or matching secret, or called from admin
-    const referer = request.headers.get("referer") || "";
-    const isAdmin = referer.includes("/admin");
     const isValidCron = cronSecret && authHeader === `Bearer ${cronSecret}`;
     const isDev = !cronSecret;
 
-    if (!isDev && !isValidCron && !isAdmin) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!isDev && !isValidCron) {
+      // Check admin session as fallback
+      const { getServerSession } = await import("next-auth");
+      const { authOptions } = await import("@/app/api/auth/[...nextauth]/route");
+      const session = await getServerSession(authOptions);
+      const role = (session?.user as Record<string, unknown> | undefined)?.role;
+      if (!session || role !== "ADMIN") {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
     }
 
-    const bumpers = await fetchBumpersFromMonday();
+    const bumpers = await mondayCircuit.execute(() =>
+      withRetry(() => fetchBumpersFromMonday(), {
+        maxRetries: 2,
+        source: "monday_sync",
+        operation: "סנכרון מלאי מ-Monday",
+      })
+    );
 
     // Upsert each bumper into BumperCache
     let synced = 0;
@@ -61,6 +72,10 @@ export async function GET(request: Request) {
       }
     }
 
+    await logger.info("monday_sync", `סנכרון הושלם: ${synced} פריטים, ${errors} שגיאות`, {
+      total: bumpers.length, synced, errors,
+    });
+
     return NextResponse.json({
       success: true,
       total: bumpers.length,
@@ -69,7 +84,7 @@ export async function GET(request: Request) {
       syncedAt: new Date().toISOString(),
     });
   } catch (error) {
-    console.error("Monday sync error:", error);
+    await logger.error("monday_sync", "סנכרון מ-Monday נכשל", { error: String(error) });
     return NextResponse.json(
       { error: "Failed to sync from Monday.com" },
       { status: 500 }

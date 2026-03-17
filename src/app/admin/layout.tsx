@@ -15,6 +15,7 @@ import {
   CubeIcon,
   ChatBubbleLeftRightIcon,
   Cog6ToothIcon,
+  ShieldCheckIcon,
   ArrowRightStartOnRectangleIcon,
   Bars3Icon,
   XMarkIcon,
@@ -27,6 +28,7 @@ const navIcons: Record<string, React.ReactNode> = {
   "/admin/customers": <UsersIcon className="w-5 h-5" />,
   "/admin/inventory": <CubeIcon className="w-5 h-5" />,
   "/admin/chat": <ChatBubbleLeftRightIcon className="w-5 h-5" />,
+  "/admin/monitoring": <ShieldCheckIcon className="w-5 h-5" />,
   "/admin/settings": <Cog6ToothIcon className="w-5 h-5" />,
 };
 
@@ -39,6 +41,24 @@ export default function AdminLayout({
   const router = useRouter();
   const { data: session, status } = useSession();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    async function fetchUnread() {
+      try {
+        const res = await fetch("/api/admin/stats");
+        if (res.ok) {
+          const data = await res.json();
+          setUnreadCount(data.stats?.unreadMessages || 0);
+        }
+      } catch { /* ignore */ }
+    }
+    if (status === "authenticated") {
+      fetchUnread();
+      const interval = setInterval(fetchUnread, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [status]);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -126,9 +146,9 @@ export default function AdminLayout({
                 >
                   {navIcons[link.href]}
                   {link.label}
-                  {link.href === "/admin/chat" && (
+                  {link.href === "/admin/chat" && unreadCount > 0 && (
                     <span className="mr-auto bg-accent text-white text-xs px-2 py-0.5 rounded-full">
-                      3
+                      {unreadCount}
                     </span>
                   )}
                 </Link>

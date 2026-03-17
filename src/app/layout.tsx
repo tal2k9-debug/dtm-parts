@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Heebo } from "next/font/google";
 import Providers from "./Providers";
 import FloatingChat from "@/components/chat/FloatingChat";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import "./globals.css";
 
 const heebo = Heebo({
@@ -11,13 +12,13 @@ const heebo = Heebo({
 });
 
 export const metadata: Metadata = {
-  title: "DTM PARTS | טמבונים ופגושים לכל סוגי הרכב",
+  title: "DTM PARTS | מגוון רחב של טמבונים / פגושים / מגנים",
   description:
-    "DTM PARTS - מגוון רחב של טמבונים ופגושים משומשים מייבוא לכל יצרני הרכב. מחירים תחרותיים, משלוח מהיר, שירות אישי.",
-  keywords: ["טמבונים", "פגושים", "חלקי רכב", "DTM", "פגוש קדמי", "פגוש אחורי"],
+    "DTM PARTS - מגוון רחב של טמבונים, פגושים ומגנים משומשים מייבוא לכל יצרני הרכב. מחירים תחרותיים, משלוח מהיר, שירות אישי.",
+  keywords: ["טמבונים", "פגושים", "מגנים", "חלקי רכב", "DTM", "פגוש קדמי", "פגוש אחורי"],
   openGraph: {
-    title: "DTM PARTS | טמבונים ופגושים לכל סוגי הרכב",
-    description: "מגוון רחב של טמבונים ופגושים משומשים מייבוא לכל יצרני הרכב",
+    title: "DTM PARTS | מגוון רחב של טמבונים / פגושים / מגנים",
+    description: "מגוון רחב של טמבונים, פגושים ומגנים משומשים מייבוא לכל יצרני הרכב",
     locale: "he_IL",
     type: "website",
   },
@@ -32,7 +33,9 @@ export default function RootLayout({
     <html lang="he" dir="rtl" className={heebo.variable}>
       <body className="font-sans antialiased">
         <Providers>
-          {children}
+          <ErrorBoundary>
+            {children}
+          </ErrorBoundary>
           <FloatingChat />
         </Providers>
       </body>

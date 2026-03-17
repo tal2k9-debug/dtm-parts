@@ -2,21 +2,28 @@
 
 import { use, useState, useEffect } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import { getPositionLabel, formatPrice } from "@/lib/utils";
-import { ShoppingBagIcon, PhoneIcon, TruckIcon, ArrowRightIcon } from "@heroicons/react/24/outline";
+import { ShoppingBagIcon, PhoneIcon, TruckIcon, ArrowRightIcon, HeartIcon } from "@heroicons/react/24/outline";
+import { HeartIcon as HeartSolid } from "@heroicons/react/24/solid";
+import { ADMIN_WHATSAPP_LINK, ADMIN_PHONE_INTL } from "@/lib/constants";
 import type { Bumper, BumperStatus } from "@/types";
 
 export default function CatalogDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const { data: session } = useSession();
+  const isLoggedIn = !!session?.user;
   const [bumper, setBumper] = useState<Bumper | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [isFavorited, setIsFavorited] = useState(false);
+  const [favLoading, setFavLoading] = useState(false);
 
   useEffect(() => {
     fetch(`/api/bumpers/${id}`)
@@ -28,6 +35,33 @@ export default function CatalogDetailPage({ params }: { params: Promise<{ id: st
       .catch(() => setError(true))
       .finally(() => setLoading(false));
   }, [id]);
+
+  // Check if bumper is favorited
+  useEffect(() => {
+    if (!isLoggedIn || !bumper) return;
+    fetch("/api/favorites")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.favorites) {
+          setIsFavorited(data.favorites.some((f: { bumperId: string }) => f.bumperId === bumper.mondayItemId));
+        }
+      })
+      .catch(() => {});
+  }, [isLoggedIn, bumper]);
+
+  const toggleFavorite = async () => {
+    if (!isLoggedIn || !bumper || favLoading) return;
+    setFavLoading(true);
+    try {
+      const res = await fetch("/api/favorites", {
+        method: isFavorited ? "DELETE" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bumperId: bumper.mondayItemId }),
+      });
+      if (res.ok) setIsFavorited(!isFavorited);
+    } catch { /* ignore */ }
+    finally { setFavLoading(false); }
+  };
 
   if (loading) {
     return (
@@ -119,7 +153,23 @@ export default function CatalogDetailPage({ params }: { params: Promise<{ id: st
             </div>
             <div className="space-y-6">
               <div>
-                <Badge variant={statusValue === "במלאי" ? "success" : statusValue === "אזל" ? "danger" : "warning"} dot className="mb-3">{bumper.status}</Badge>
+                <div className="flex items-center justify-between mb-3">
+                  <Badge variant={statusValue === "במלאי" ? "success" : statusValue === "אזל" ? "danger" : "warning"} dot>{bumper.status}</Badge>
+                  {isLoggedIn && (
+                    <button
+                      onClick={toggleFavorite}
+                      disabled={favLoading}
+                      className="p-2 rounded-xl hover:bg-red-50 transition-colors"
+                      title={isFavorited ? "הסר ממועדפים" : "הוסף למועדפים"}
+                    >
+                      {isFavorited ? (
+                        <HeartSolid className="w-7 h-7 text-red-500" />
+                      ) : (
+                        <HeartIcon className="w-7 h-7 text-gray-400 hover:text-red-400" />
+                      )}
+                    </button>
+                  )}
+                </div>
                 <h1 className="text-2xl sm:text-3xl font-extrabold text-text mb-2">{bumper.name}</h1>
                 {bumper.price && <p className="text-3xl font-bold text-primary">{formatPrice(bumper.price)}</p>}
               </div>
@@ -132,13 +182,13 @@ export default function CatalogDetailPage({ params }: { params: Promise<{ id: st
                 </div>
               </Card>
               <div className="space-y-3">
-                <Link href={`/quote?make=${encodeURIComponent(bumper.carMake)}&model=${encodeURIComponent(bumper.carModel)}&year=${encodeURIComponent(bumper.carYear)}&position=${bumper.position || ""}`}>
+                <Link href={`/quote?make=${encodeURIComponent(bumper.carMake)}&model=${encodeURIComponent(bumper.carModel)}&year=${encodeURIComponent(bumper.carYear)}&position=${bumper.position || ""}&catalogNumber=${encodeURIComponent(bumper.name)}`}>
                   <Button fullWidth size="lg" icon={<ShoppingBagIcon className="w-5 h-5" />}>שלח בקשת מחיר</Button>
                 </Link>
-                <a href="https://wa.me/972501234567" target="_blank">
+                <a href={ADMIN_WHATSAPP_LINK} target="_blank" rel="noopener noreferrer">
                   <Button fullWidth size="lg" variant="whatsapp" className="mt-3">שלח הודעה בוואטסאפ</Button>
                 </a>
-                <a href="tel:+972501234567">
+                <a href={`tel:${ADMIN_PHONE_INTL}`}>
                   <Button fullWidth size="lg" variant="secondary" icon={<PhoneIcon className="w-5 h-5" />} className="mt-3">התקשרו אלינו</Button>
                 </a>
               </div>

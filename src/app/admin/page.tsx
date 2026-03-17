@@ -75,7 +75,17 @@ export default function AdminDashboard() {
 
   const handleSync = async () => {
     setSyncing(true);
-    try { await fetch("/api/monday/sync"); } finally { setTimeout(() => setSyncing(false), 2000); }
+    try {
+      const res = await fetch("/api/monday/sync");
+      const data = await res.json();
+      if (!res.ok) {
+        console.error("Sync failed:", data.error);
+      }
+    } catch (err) {
+      console.error("Sync error:", err);
+    } finally {
+      setSyncing(false);
+    }
   };
 
   const kpis = [

@@ -11,6 +11,7 @@ import Select from "@/components/ui/Select";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import { CheckCircleIcon, PaperAirplaneIcon } from "@heroicons/react/24/outline";
+import { ADMIN_WHATSAPP_LINK } from "@/lib/constants";
 
 const FALLBACK_MAKES = ["יונדאי", "קיה", "טויוטה", "מזדה", "ניסאן", "שברולט", "פולקסווגן", "סקודה", "הונדה", "פורד", "אחר"];
 const FALLBACK_YEARS = Array.from({ length: 15 }, (_, i) => String(2024 - i));
@@ -28,6 +29,8 @@ export default function QuoteContent() {
 
   const isLoggedIn = !!session?.user;
 
+  const catalogNumber = searchParams.get("catalogNumber") || "";
+
   const [form, setForm] = useState({
     name: "",
     phone: "",
@@ -35,6 +38,7 @@ export default function QuoteContent() {
     carModel: searchParams.get("model") || "",
     carYear: searchParams.get("year") || "",
     position: searchParams.get("position") || "",
+    licensePlate: "",
     notes: "",
   });
 
@@ -100,6 +104,8 @@ export default function QuoteContent() {
         carModel: form.carModel,
         carYear: form.carYear,
         position: form.position,
+        licensePlate: form.licensePlate || undefined,
+        catalogNumber: catalogNumber || undefined,
         notes: form.notes || undefined,
       };
 
@@ -150,7 +156,7 @@ export default function QuoteContent() {
               <Button fullWidth variant="primary" onClick={() => (window.location.href = "/")}>
                 חזרה לדף הראשי
               </Button>
-              <a href="https://wa.me/972XXXXXXXXX" target="_blank" rel="noopener noreferrer">
+              <a href={ADMIN_WHATSAPP_LINK} target="_blank" rel="noopener noreferrer">
                 <Button fullWidth variant="whatsapp">דברו איתנו בוואטסאפ</Button>
               </a>
             </div>
@@ -198,6 +204,18 @@ export default function QuoteContent() {
                     <Select label="שנה" placeholder="בחרו שנה" value={form.carYear} onChange={(e) => updateField("carYear", e.target.value)} options={years.map((y) => ({ value: y, label: y }))} required />
                     <Select label="מיקום הטמבון" placeholder="קדמי / אחורי" value={form.position} onChange={(e) => updateField("position", e.target.value)} options={[{ value: "FRONT", label: "קדמי" }, { value: "REAR", label: "אחורי" }]} required />
                   </div>
+                  {!catalogNumber && (
+                    <div className="mt-4">
+                      <Input
+                        label="מספר רכב"
+                        placeholder="לדוגמה: 12-345-67"
+                        value={form.licensePlate}
+                        onChange={(e) => updateField("licensePlate", e.target.value)}
+                        required
+                      />
+                      <p className="text-xs text-text-muted mt-1">מספר הרכב עוזר לנו לזהות בדיוק את החלק המתאים</p>
+                    </div>
+                  )}
                 </div>
 
                 <div>

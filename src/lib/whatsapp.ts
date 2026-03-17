@@ -37,13 +37,17 @@ export function formatNewRequestMessage(data: {
   carModel: string;
   carYear: string;
   position: string;
+  licensePlate?: string;
+  catalogNumber?: string;
   notes?: string;
   requestId: string;
 }) {
   const positionLabel = data.position === "FRONT" ? "קדמי" : "אחורי";
+  const plateLine = data.licensePlate ? `\nמספר רכב: ${data.licensePlate}` : "";
+  const catalogLine = data.catalogNumber ? `\nמק"ט: ${data.catalogNumber}` : "";
   return `🔔 בקשה חדשה ב-DTM!
 לקוח: ${data.name} (${data.phone})
-רכב: ${data.carMake} ${data.carModel} ${data.carYear} — ${positionLabel}
+רכב: ${data.carMake} ${data.carModel} ${data.carYear} — ${positionLabel}${plateLine}${catalogLine}
 הערה: "${data.notes || "-"}"
 https://dtmparts.co.il/admin/requests/${data.requestId}`;
 }

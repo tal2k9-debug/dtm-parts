@@ -1,6 +1,11 @@
 export const SITE_NAME = "DTM PARTS";
-export const SITE_DESCRIPTION = "טמבונים ופגושים לכל סוגי הרכב";
+export const SITE_DESCRIPTION = "מגוון רחב של טמבונים / פגושים / מגנים";
 export const SITE_URL = "https://dtmparts.co.il";
+
+// Contact info — single source of truth
+export const ADMIN_PHONE = process.env.NEXT_PUBLIC_ADMIN_PHONE || "050-0000000";
+export const ADMIN_PHONE_INTL = process.env.NEXT_PUBLIC_ADMIN_PHONE_INTL || "+972500000000";
+export const ADMIN_WHATSAPP_LINK = `https://wa.me/${(process.env.NEXT_PUBLIC_ADMIN_PHONE_INTL || "+972500000000").replace("+", "")}`;
 
 export const BUMPERS_BOARD_ID = "3928998531";
 
@@ -52,5 +57,6 @@ export const ADMIN_NAV_LINKS = [
   { href: "/admin/customers", label: "לקוחות" },
   { href: "/admin/inventory", label: "מלאי" },
   { href: "/admin/chat", label: "צ׳אט" },
+  { href: "/admin/monitoring", label: "ניטור" },
   { href: "/admin/settings", label: "הגדרות" },
 ];

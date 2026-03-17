@@ -49,7 +49,7 @@ export default function HeroSection() {
             </h1>
 
             <p className="text-lg sm:text-xl text-white/70 leading-relaxed mb-8 max-w-lg">
-              מאות טמבונים ופגושים במלאי, לכל יצרני הרכב.
+              מגוון רחב של טמבונים, פגושים ומגנים במלאי, לכל יצרני הרכב.
               חפשו לפי רכב וקבלו הצעת מחיר תוך דקות.
             </p>
 

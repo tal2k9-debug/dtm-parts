@@ -218,6 +218,10 @@ export async function fetchSingleBumperFromMonday(itemId: string): Promise<Monda
         value
         type
       }
+      assets {
+        id
+        public_url
+      }
     }
   }`;
 
