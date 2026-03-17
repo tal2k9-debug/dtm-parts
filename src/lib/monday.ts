@@ -35,25 +35,31 @@ function getColumnText(item: MondayItem, columnId: string): string {
 
 function getFileUrls(item: MondayItem): string[] {
   const fileCol = item.column_values.find((c) => c.id === "file6");
-  if (!fileCol?.value) return [];
+  if (!fileCol) return [];
 
-  try {
-    const parsed = JSON.parse(fileCol.value);
-    if (parsed?.files) {
-      return parsed.files.map(
-        (f: { assetId: number }) =>
-          `/api/images/monday/${f.assetId}`
-      );
-    }
-  } catch {
-    // fallback: extract URLs from text
-    if (fileCol.text) {
-      return fileCol.text
-        .split(",")
-        .map((url: string) => url.trim())
-        .filter(Boolean);
+  // Try parsing JSON value first (has assetId)
+  if (fileCol.value) {
+    try {
+      const parsed = JSON.parse(fileCol.value);
+      if (parsed?.files) {
+        return parsed.files.map(
+          (f: { assetId: number }) =>
+            `/api/images/monday/${f.assetId}`
+        );
+      }
+    } catch {
+      // fall through to text fallback
     }
   }
+
+  // Fallback: extract URLs from text field
+  if (fileCol.text) {
+    return fileCol.text
+      .split(",")
+      .map((url: string) => url.trim())
+      .filter((url: string) => url.startsWith("http"));
+  }
+
   return [];
 }
 
