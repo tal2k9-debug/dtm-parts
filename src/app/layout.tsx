@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Heebo } from "next/font/google";
 import Providers from "./Providers";
+import FloatingChat from "@/components/chat/FloatingChat";
 import "./globals.css";
 
 const heebo = Heebo({
@@ -30,7 +31,10 @@ export default function RootLayout({
   return (
     <html lang="he" dir="rtl" className={heebo.variable}>
       <body className="font-sans antialiased">
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+          <FloatingChat />
+        </Providers>
       </body>
     </html>
   );
