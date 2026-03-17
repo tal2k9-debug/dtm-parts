@@ -19,6 +19,7 @@ export async function GET(
   }
 
   try {
+    // Get signed URL from Monday
     const response = await fetch("https://api.monday.com/v2", {
       method: "POST",
       headers: {
@@ -44,10 +45,20 @@ export async function GET(
       return NextResponse.json({ error: "Asset not found" }, { status: 404 });
     }
 
-    return NextResponse.redirect(publicUrl, {
-      status: 302,
+    // Fetch the actual image and stream it back
+    const imageResponse = await fetch(publicUrl);
+    if (!imageResponse.ok) {
+      return NextResponse.json({ error: "Image fetch failed" }, { status: 502 });
+    }
+
+    const contentType = imageResponse.headers.get("content-type") || "image/jpeg";
+    const imageBuffer = await imageResponse.arrayBuffer();
+
+    return new NextResponse(imageBuffer, {
+      status: 200,
       headers: {
-        "Cache-Control": "public, max-age=3600",
+        "Content-Type": contentType,
+        "Cache-Control": "public, max-age=86400, s-maxage=86400",
       },
     });
   } catch {

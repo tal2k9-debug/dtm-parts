@@ -14,8 +14,9 @@ export async function GET() {
       .map((r) => r.carMake)
       .filter((m) => {
         if (!m || m.trim().length < 2) return false;
-        // Filter out year-like values: "2017+", "2010-2014", etc.
-        if (/^\d{4}/.test(m)) return false;
+        // Filter out anything that contains year patterns:
+        // "2017+", "+2017", "2010-2014", "2018-2021", "2021+", etc.
+        if (/\d{4}/.test(m)) return false;
         return true;
       });
 
