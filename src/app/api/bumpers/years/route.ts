@@ -21,7 +21,9 @@ export async function GET(request: NextRequest) {
       orderBy: { carYear: "desc" },
     });
 
-    const years = results.map((r) => r.carYear);
+    const years = results
+      .map((r) => r.carYear)
+      .filter((y) => y && y.trim().length > 0);
 
     return NextResponse.json(years);
   } catch (error) {

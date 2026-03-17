@@ -178,8 +178,8 @@ export default function CatalogContent() {
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
                 options={[
-                  { value: "במלאי", label: "במלאי" },
-                  { value: "אזל", label: "אזל" },
+                  { value: "instock", label: "במלאי" },
+                  { value: "outofstock", label: "אזל" },
                   { value: "בהזמנה", label: "בהזמנה" },
                 ]}
               />

@@ -1,6 +1,24 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+// Transform protected Monday.com URLs to proxy URLs
+function transformImageUrl(url: string | null): string | null {
+  if (!url) return null;
+  if (url.startsWith("/api/images/monday/")) return url;
+  const match = url.match(/monday\.com\/protected_static\/\d+\/resources\/(\d+)\//);
+  if (match) {
+    return `/api/images/monday/${match[1]}`;
+  }
+  return url;
+}
+
+// Normalize status values from Monday ("כן"/"לא") to display values
+function normalizeStatus(status: string): string {
+  if (status === "כן") return "במלאי";
+  if (status === "לא") return "אזל";
+  return status;
+}
+
 // GET /api/bumpers/[id] — Fetch a single bumper by ID
 export async function GET(
   request: Request,
@@ -20,7 +38,15 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(bumper);
+    // Transform URLs and normalize status
+    const transformed = {
+      ...bumper,
+      imageUrl: transformImageUrl(bumper.imageUrl),
+      imageUrls: bumper.imageUrls.map((url) => transformImageUrl(url) || url),
+      status: normalizeStatus(bumper.status),
+    };
+
+    return NextResponse.json(transformed);
   } catch (error) {
     console.error("Error fetching bumper:", error);
     return NextResponse.json(

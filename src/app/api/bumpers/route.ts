@@ -2,6 +2,26 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Prisma, Position } from "@prisma/client";
 
+// Transform protected Monday.com URLs to proxy URLs
+function transformImageUrl(url: string | null): string | null {
+  if (!url) return null;
+  // Already a proxy URL
+  if (url.startsWith("/api/images/monday/")) return url;
+  // Protected Monday URL: extract resource ID and proxy it
+  const match = url.match(/monday\.com\/protected_static\/\d+\/resources\/(\d+)\//);
+  if (match) {
+    return `/api/images/monday/${match[1]}`;
+  }
+  return url;
+}
+
+// Normalize status values from Monday ("כן"/"לא") to display values
+function normalizeStatus(status: string): string {
+  if (status === "כן") return "במלאי";
+  if (status === "לא") return "אזל";
+  return status;
+}
+
 // GET /api/bumpers — Fetch bumpers from BumperCache with filtering and pagination
 export async function GET(request: NextRequest) {
   try {
@@ -31,13 +51,20 @@ export async function GET(request: NextRequest) {
       where.position = position as Position;
     }
     if (status) {
-      where.status = status;
+      // Map logical filter values to actual DB values (handles both old and new data)
+      if (status === "instock") {
+        where.status = { in: ["במלאי", "כן"] };
+      } else if (status === "outofstock") {
+        where.status = { in: ["אזל", "לא"] };
+      } else {
+        where.status = status;
+      }
     }
     if (search) {
       where.name = { contains: search };
     }
 
-    const [bumpers, total] = await Promise.all([
+    const [rawBumpers, total] = await Promise.all([
       prisma.bumperCache.findMany({
         where,
         skip: (page - 1) * limit,
@@ -46,6 +73,13 @@ export async function GET(request: NextRequest) {
       }),
       prisma.bumperCache.count({ where }),
     ]);
+
+    // Transform protected Monday URLs to proxy URLs and normalize status
+    const bumpers = rawBumpers.map((b) => ({
+      ...b,
+      imageUrl: transformImageUrl(b.imageUrl),
+      status: normalizeStatus(b.status),
+    }));
 
     return NextResponse.json({
       bumpers,

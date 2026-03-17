@@ -6,16 +6,29 @@ import Badge from "@/components/ui/Badge";
 import { formatPrice, getPositionLabel } from "@/lib/utils";
 import type { Bumper, BumperStatus } from "@/types";
 
-function getStatusBadgeVariant(status: BumperStatus): "success" | "danger" | "warning" {
+function getStatusBadgeVariant(status: string): "success" | "danger" | "warning" {
   switch (status) {
     case "במלאי":
+    case "כן":
       return "success";
     case "אזל":
+    case "לא":
       return "danger";
     case "בהזמנה":
       return "warning";
     default:
-      return "success";
+      return "danger";
+  }
+}
+
+function getStatusLabel(status: string): string {
+  switch (status) {
+    case "כן":
+      return "במלאי";
+    case "לא":
+      return "אזל";
+    default:
+      return status;
   }
 }
 
@@ -48,7 +61,7 @@ export default function BumperCard({ bumper }: { bumper: Bumper }) {
             {/* Status badge overlay */}
             <div className="absolute top-3 right-3">
               <Badge variant={getStatusBadgeVariant(bumper.status)} dot>
-                {bumper.status}
+                {getStatusLabel(bumper.status)}
               </Badge>
             </div>
           </div>

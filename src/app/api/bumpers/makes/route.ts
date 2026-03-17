@@ -9,10 +9,15 @@ export async function GET() {
       orderBy: { carMake: "asc" },
     });
 
-    // Filter out values that look like years/numbers (bad data from Monday)
+    // Filter out empty values and values that look like years/numbers (bad data from Monday)
     const makes = results
       .map((r) => r.carMake)
-      .filter((m) => m && !/^\+?\d{4}/.test(m) && !/^\d{4}\s*-\s*\d{4}$/.test(m) && m.length > 1);
+      .filter((m) => {
+        if (!m || m.trim().length < 2) return false;
+        // Filter out year-like values: "2017+", "2010-2014", etc.
+        if (/^\d{4}/.test(m)) return false;
+        return true;
+      });
 
     return NextResponse.json(makes);
   } catch (error) {

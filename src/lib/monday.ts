@@ -12,7 +12,7 @@ interface MondayItem {
   id: string;
   name: string;
   column_values: MondayColumnValue[];
-  assets?: { public_url: string }[];
+  assets?: { id: string; public_url: string }[];
 }
 
 export interface MondayBumper {
@@ -24,7 +24,7 @@ export interface MondayBumper {
   position: "FRONT" | "REAR" | null;
   color: string;
   condition: string;
-  status: string; // "כן" = in stock
+  status: string; // "במלאי" / "אזל" (mapped from Monday "כן"/"לא")
   imageUrls: string[];
 }
 
@@ -41,23 +41,47 @@ function getFileUrls(item: MondayItem): string[] {
   if (fileCol.value) {
     try {
       const parsed = JSON.parse(fileCol.value);
-      if (parsed?.files) {
-        return parsed.files.map(
-          (f: { assetId: number }) =>
-            `/api/images/monday/${f.assetId}`
-        );
+      // Structure: { files: [{ assetId: number, ... }] }
+      if (parsed?.files && Array.isArray(parsed.files)) {
+        const proxyUrls = parsed.files
+          .filter((f: { assetId?: number }) => f.assetId)
+          .map(
+            (f: { assetId: number }) =>
+              `/api/images/monday/${f.assetId}`
+          );
+        if (proxyUrls.length > 0) return proxyUrls;
       }
     } catch {
-      // fall through to text fallback
+      // fall through to text/assets fallback
     }
   }
 
-  // Fallback: extract URLs from text field
+  // Fallback: use item assets if available (public_url from Monday API)
+  if (item.assets && item.assets.length > 0) {
+    return item.assets
+      .map((a) => a.public_url)
+      .filter((url) => !!url);
+  }
+
+  // Last resort: extract resource IDs from protected_static URLs and proxy them
   if (fileCol.text) {
-    return fileCol.text
+    const urls = fileCol.text
       .split(",")
       .map((url: string) => url.trim())
       .filter((url: string) => url.startsWith("http"));
+
+    // Try to extract resource IDs from Monday protected URLs
+    // Pattern: /protected_static/{accountId}/resources/{resourceId}/filename
+    const proxyUrls = urls
+      .map((url: string) => {
+        const match = url.match(/\/resources\/(\d+)\//);
+        if (match) {
+          return `/api/images/monday/${match[1]}`;
+        }
+        return url; // keep as-is if pattern doesn't match
+      });
+
+    return proxyUrls;
   }
 
   return [];
@@ -69,6 +93,14 @@ function mapPosition(text: string): "FRONT" | "REAR" | null {
   return null;
 }
 
+function mapStatus(text: string): string {
+  // Monday column uses "כן"/"לא" but we display "במלאי"/"אזל"
+  if (text === "כן") return "במלאי";
+  if (text === "לא") return "אזל";
+  // Pass through any other values (e.g., "בהזמנה" if added later)
+  return text || "אזל";
+}
+
 export async function fetchBumpersFromMonday(): Promise<MondayBumper[]> {
   const apiKey = process.env.MONDAY_API_KEY;
   if (!apiKey) throw new Error("MONDAY_API_KEY is not set");
@@ -77,7 +109,7 @@ export async function fetchBumpersFromMonday(): Promise<MondayBumper[]> {
   let cursor: string | null = null;
   let hasMore = true;
 
-  // First request
+  // First request - include assets for image public URLs
   const firstQuery = `{
     boards(ids: [${BUMPERS_BOARD_ID}]) {
       items_page(limit: 100) {
@@ -90,6 +122,10 @@ export async function fetchBumpersFromMonday(): Promise<MondayBumper[]> {
             text
             value
             type
+          }
+          assets {
+            id
+            public_url
           }
         }
       }
@@ -126,6 +162,10 @@ export async function fetchBumpersFromMonday(): Promise<MondayBumper[]> {
             value
             type
           }
+          assets {
+            id
+            public_url
+          }
         }
       }
     }`;
@@ -159,7 +199,7 @@ export async function fetchBumpersFromMonday(): Promise<MondayBumper[]> {
     position: mapPosition(getColumnText(item, "color")),
     color: getColumnText(item, "text4"),
     condition: getColumnText(item, "text6"),
-    status: getColumnText(item, "color_mkwzjzja"),
+    status: mapStatus(getColumnText(item, "color_mkwzjzja")),
     imageUrls: getFileUrls(item),
   }));
 }
@@ -203,7 +243,7 @@ export async function fetchSingleBumperFromMonday(itemId: string): Promise<Monda
     position: mapPosition(getColumnText(item, "color")),
     color: getColumnText(item, "text4"),
     condition: getColumnText(item, "text6"),
-    status: getColumnText(item, "color_mkwzjzja"),
+    status: mapStatus(getColumnText(item, "color_mkwzjzja")),
     imageUrls: getFileUrls(item),
   };
 }

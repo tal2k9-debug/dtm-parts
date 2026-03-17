@@ -20,7 +20,9 @@ export async function GET(request: NextRequest) {
       orderBy: { carModel: "asc" },
     });
 
-    const models = results.map((r) => r.carModel);
+    const models = results
+      .map((r) => r.carModel)
+      .filter((m) => m && m.trim().length > 0);
 
     return NextResponse.json(models);
   } catch (error) {
