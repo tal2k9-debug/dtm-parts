@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Prisma, Position } from "@prisma/client";
 import { doesYearMatch } from "@/lib/yearParser";
+import { normalizeHebrew } from "@/lib/hebrewNormalize";
 
 // Transform protected Monday.com URLs to proxy URLs (fallback when no blob)
 function transformImageUrl(url: string | null): string | null {
@@ -48,10 +49,40 @@ export async function GET(request: NextRequest) {
     const where: Prisma.BumperCacheWhereInput = {};
 
     if (make) {
-      where.carMake = make;
+      // Search for all geresh variants (צ'רי, צרי, etc.)
+      const normalizedMake = normalizeHebrew(make);
+      // Find all DB makes that match when normalized
+      const allMakes = await prisma.bumperCache.findMany({
+        select: { carMake: true },
+        distinct: ["carMake"],
+      });
+      const matchingMakes = allMakes
+        .map((m) => m.carMake)
+        .filter((m) => normalizeHebrew(m) === normalizedMake);
+
+      if (matchingMakes.length > 1) {
+        where.carMake = { in: matchingMakes };
+      } else {
+        where.carMake = matchingMakes[0] || make;
+      }
     }
     if (model) {
-      where.carModel = model;
+      // Same normalization for model
+      const normalizedModel = normalizeHebrew(model);
+      const allModels = await prisma.bumperCache.findMany({
+        select: { carModel: true },
+        distinct: ["carModel"],
+        where: where.carMake ? { carMake: where.carMake as any } : undefined,
+      });
+      const matchingModels = allModels
+        .map((m) => m.carModel)
+        .filter((m) => normalizeHebrew(m) === normalizedModel);
+
+      if (matchingModels.length > 1) {
+        where.carModel = { in: matchingModels };
+      } else {
+        where.carModel = matchingModels[0] || model;
+      }
     }
     // Year filtering is handled post-query via doesYearMatch
     const filterByYear = year ? parseInt(year) : null;
