@@ -6,12 +6,13 @@ import { prisma } from "@/lib/prisma";
 // GET - fetch current user profile
 export async function GET() {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
+  const userId = (session?.user as { id?: string } | undefined)?.id;
+  if (!userId) {
     return NextResponse.json({ error: "לא מחובר" }, { status: 401 });
   }
 
   const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
+    where: { id: userId },
     select: {
       id: true,
       name: true,
@@ -34,7 +35,8 @@ export async function GET() {
 // PUT - update user profile
 export async function PUT(request: Request) {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
+  const userId = (session?.user as { id?: string } | undefined)?.id;
+  if (!userId) {
     return NextResponse.json({ error: "לא מחובר" }, { status: 401 });
   }
 
@@ -47,7 +49,7 @@ export async function PUT(request: Request) {
   }
 
   const user = await prisma.user.update({
-    where: { id: session.user.id },
+    where: { id: userId },
     data: {
       name,
       phone,
