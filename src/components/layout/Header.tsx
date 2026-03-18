@@ -146,17 +146,13 @@ export default function Header() {
                 </button>
               </>
             ) : (
-              <Link href="/register">
+              <Link href="/register" className="relative">
+                <span className="absolute -inset-1 bg-accent/40 rounded-xl animate-ping opacity-25" />
                 <Button size="sm" variant={isScrolled ? "outline" : "accent"} icon={<UserPlusIcon className="w-4 h-4" />}>
                   הרשמה — 10% הנחה
                 </Button>
               </Link>
             )}
-            <Link href="/quote">
-              <Button size="sm" variant={isScrolled ? "primary" : "accent"}>
-                בקשת מחיר
-              </Button>
-            </Link>
             {/* Mobile menu button */}
             <button
               className="md:hidden p-2 rounded-lg"
