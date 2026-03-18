@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { extractAllYears } from "@/lib/yearParser";
 
 export async function GET(request: NextRequest) {
   try {
@@ -18,12 +19,17 @@ export async function GET(request: NextRequest) {
       where: { carMake: make, carModel: model },
       select: { carYear: true },
       distinct: ["carYear"],
-      orderBy: { carYear: "desc" },
     });
 
-    const years = results
+    const rawYears = results
       .map((r) => r.carYear)
       .filter((y) => y && y.trim().length > 0);
+
+    // Parse all year ranges into individual years (sorted descending)
+    const individualYears = extractAllYears(rawYears);
+
+    // Return as strings for the dropdown
+    const years = individualYears.map(String);
 
     return NextResponse.json(years);
   } catch (error) {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Prisma, Position } from "@prisma/client";
+import { doesYearMatch } from "@/lib/yearParser";
 
 // Transform protected Monday.com URLs to proxy URLs
 function transformImageUrl(url: string | null): string | null {
@@ -44,9 +45,8 @@ export async function GET(request: NextRequest) {
     if (model) {
       where.carModel = model;
     }
-    if (year) {
-      where.carYear = year;
-    }
+    // Year filtering is handled post-query via doesYearMatch
+    const filterByYear = year ? parseInt(year) : null;
     if (position && (position === "FRONT" || position === "REAR")) {
       where.position = position as Position;
     }
@@ -64,6 +64,39 @@ export async function GET(request: NextRequest) {
       where.name = { contains: search };
     }
 
+    if (filterByYear && !isNaN(filterByYear)) {
+      // Year filtering requires in-memory matching against ranges
+      // Fetch all matching bumpers (without pagination), filter by year, then paginate
+      const allRaw = await prisma.bumperCache.findMany({
+        where,
+        orderBy: { lastSynced: "desc" },
+      });
+
+      const yearFiltered = allRaw.filter((b) =>
+        doesYearMatch(b.carYear, filterByYear)
+      );
+
+      const total = yearFiltered.length;
+      const paged = yearFiltered.slice((page - 1) * limit, page * limit);
+
+      const bumpers = paged.map((b) => ({
+        ...b,
+        imageUrl: transformImageUrl(b.imageUrl),
+        status: normalizeStatus(b.status),
+      }));
+
+      return NextResponse.json({
+        bumpers,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+      });
+    }
+
+    // No year filter — standard DB pagination
     const [rawBumpers, total] = await Promise.all([
       prisma.bumperCache.findMany({
         where,
