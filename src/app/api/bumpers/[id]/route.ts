@@ -38,11 +38,13 @@ export async function GET(
       );
     }
 
-    // Transform URLs and normalize status
+    // Prefer blob URLs, fallback to Monday proxy
     const transformed = {
       ...bumper,
-      imageUrl: transformImageUrl(bumper.imageUrl),
-      imageUrls: bumper.imageUrls.map((url) => transformImageUrl(url) || url),
+      imageUrl: bumper.blobImageUrl || transformImageUrl(bumper.imageUrl),
+      imageUrls: bumper.blobImageUrls.length > 0
+        ? bumper.blobImageUrls
+        : bumper.imageUrls.map((url) => transformImageUrl(url) || url),
       status: normalizeStatus(bumper.status),
     };
 

@@ -96,6 +96,7 @@ model ImageCache {
   id        String   @id @default(cuid())
   assetId   String   @unique
   publicUrl String
+  blobUrl   String?
   expiresAt DateTime
   createdAt DateTime @default(now())
 }
@@ -176,7 +177,9 @@ model BumperCache {
   position     Position?
   price        Float?
   status       String
-  imageUrl     String?
-  imageUrls    String[]  @default([])
-  lastSynced   DateTime  @updatedAt
+  imageUrl      String?
+  imageUrls     String[]  @default([])
+  blobImageUrl  String?
+  blobImageUrls String[]  @default([])
+  lastSynced    DateTime  @updatedAt
 }

@@ -16,6 +16,25 @@ export async function GET(
     return Response.json({ error: "Invalid asset ID" }, { status: 400 });
   }
 
+  // 0. Check for permanent Blob URL (never expires)
+  try {
+    const blobCache = await prisma.imageCache.findUnique({
+      where: { assetId },
+      select: { blobUrl: true },
+    });
+    if (blobCache?.blobUrl) {
+      return new Response(null, {
+        status: 307,
+        headers: {
+          Location: blobCache.blobUrl,
+          "Cache-Control": "public, max-age=31536000, immutable",
+        },
+      });
+    }
+  } catch {
+    // Continue to other caches
+  }
+
   // 1. Check in-memory cache first (fastest)
   const cached = urlCache.get(assetId);
   if (cached && cached.expiresAt > Date.now()) {

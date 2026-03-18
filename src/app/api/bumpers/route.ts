@@ -3,17 +3,25 @@ import { prisma } from "@/lib/prisma";
 import { Prisma, Position } from "@prisma/client";
 import { doesYearMatch } from "@/lib/yearParser";
 
-// Transform protected Monday.com URLs to proxy URLs
+// Transform protected Monday.com URLs to proxy URLs (fallback when no blob)
 function transformImageUrl(url: string | null): string | null {
   if (!url) return null;
-  // Already a proxy URL
   if (url.startsWith("/api/images/monday/")) return url;
-  // Protected Monday URL: extract resource ID and proxy it
   const match = url.match(/monday\.com\/protected_static\/\d+\/resources\/(\d+)\//);
   if (match) {
     return `/api/images/monday/${match[1]}`;
   }
   return url;
+}
+
+// Prefer blob URL, fallback to Monday proxy
+function getBestImageUrl(blobUrl: string | null, mondayUrl: string | null): string | null {
+  return blobUrl || transformImageUrl(mondayUrl);
+}
+
+function getBestImageUrls(blobUrls: string[], mondayUrls: string[]): string[] {
+  if (blobUrls.length > 0) return blobUrls;
+  return mondayUrls.map((url) => transformImageUrl(url) || url);
 }
 
 // Normalize status values from Monday ("כן"/"לא") to display values
@@ -81,7 +89,8 @@ export async function GET(request: NextRequest) {
 
       const bumpers = paged.map((b) => ({
         ...b,
-        imageUrl: transformImageUrl(b.imageUrl),
+        imageUrl: getBestImageUrl(b.blobImageUrl, b.imageUrl),
+        imageUrls: getBestImageUrls(b.blobImageUrls, b.imageUrls),
         status: normalizeStatus(b.status),
       }));
 
