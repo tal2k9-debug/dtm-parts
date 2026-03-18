@@ -2,22 +2,33 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { normalizeHebrew } from "@/lib/hebrewNormalize";
 
-// Extract the "base model" from variants like "A CLASS 176" → "A CLASS"
-// Keeps known suffixes that are meaningful model names
+/**
+ * Extract the "base model" from a full model string.
+ * Groups variants so the dropdown shows clean options.
+ *
+ * Examples:
+ *   "A CLASS 176"       → "A CLASS"
+ *   "A CLASS W177"      → "A CLASS"
+ *   "A CLASS AMG 177"   → "A CLASS AMG"
+ *   "C CLASS W205 AMG COUPE" → "C CLASS AMG"
+ *   "גולף 7.5"          → "גולף"
+ *   "גולף GTI"          → "גולף GTI"
+ *   "X3 F25 LIFT"       → "X3"
+ *   "סדרה 3GT"          → "סדרה"
+ */
 function getBaseModel(model: string): string {
   const trimmed = model.trim();
-
-  // Remove trailing numbers/codes like "176", "177", "W205", "253", etc.
-  // Pattern: strip trailing segments that are just numbers, or W+numbers, or single letters
   const parts = trimmed.split(/\s+/);
   const baseParts: string[] = [];
 
   for (const part of parts) {
-    // Keep words, skip: pure numbers (176, 205), chassis codes (W205, W169),
-    // "LIFT", "AMG", "COUPE", "סדאן", "קופה" — these are trim levels, keep the base
-    if (/^\d+$/.test(part)) continue; // pure number like 176, 205
-    if (/^[A-Z]\d+$/.test(part)) continue; // chassis code like W205, W169
-    if (part === "LIFT" || part === "COUPE" || part === "סדאן" || part === "קופה") continue;
+    // Skip pure numbers: 176, 205, 212, 7.5, 63
+    if (/^\d+[\.\d]*$/.test(part)) continue;
+    // Skip chassis/generation codes: W205, W169, F20, G30, E92, W166
+    if (/^[A-Z]\d{1,3}$/i.test(part)) continue;
+    // Skip "LIFT", "FL", "LCI", "COUPE", "סדאן", "קופה", "סטיישן", "האצבק", "OG"
+    if (/^(LIFT|FL|LCI|COUPE|OG|COMP|MPACK|MPAK|PACK)$/i.test(part)) continue;
+    if (/^(סדאן|קופה|סטיישן|האצבק|קומפקט|מקסי|גרנד)$/.test(part)) continue;
     baseParts.push(part);
   }
 
@@ -36,7 +47,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Find all DB makes matching after geresh normalization
+    // Find all DB makes matching after normalization
     const normalizedMake = normalizeHebrew(make);
     const allMakes = await prisma.bumperCache.findMany({
       select: { carMake: true },
@@ -55,19 +66,25 @@ export async function GET(request: NextRequest) {
       orderBy: { carModel: "asc" },
     });
 
-    // Group by base model name to collapse variants
-    // "A CLASS 176", "A CLASS 177", "A CLASS W169" → "A CLASS"
-    // But keep unique base models: "A CLASS", "B CLASS", "C CLASS" stay separate
+    // Group by NORMALIZED base model to collapse all variants
+    // "A CLASS 176", "A CLASS W177", "Aקלאס" → all normalize to "a class" → show "A CLASS"
     const baseModelMap = new Map<string, string>();
 
     for (const r of results) {
       if (!r.carModel || r.carModel.trim().length === 0) continue;
-      const normalized = normalizeHebrew(r.carModel);
-      const base = normalizeHebrew(getBaseModel(r.carModel));
 
-      if (!baseModelMap.has(base)) {
-        // Use the shortest/cleanest variant as display name
-        baseModelMap.set(base, getBaseModel(r.carModel));
+      const base = getBaseModel(r.carModel);
+      const normalizedBase = normalizeHebrew(base);
+
+      if (!baseModelMap.has(normalizedBase)) {
+        // Prefer the English/longer form as display name
+        baseModelMap.set(normalizedBase, base);
+      } else {
+        // If we already have this base, prefer the version with English/longer text
+        const existing = baseModelMap.get(normalizedBase)!;
+        if (base.length > existing.length || (/[A-Z]/.test(base) && !/[A-Z]/.test(existing))) {
+          baseModelMap.set(normalizedBase, base);
+        }
       }
     }
 

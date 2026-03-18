@@ -79,8 +79,15 @@ export async function GET(request: NextRequest) {
         .map((m) => m.carModel)
         .filter((m) => {
           const norm = normalizeHebrew(m);
-          // Exact match OR the DB model starts with / contains the search model
-          return norm === normalizedModel || norm.startsWith(normalizedModel + " ") || norm.includes(" " + normalizedModel + " ");
+          // Exact match, starts with, or contains the search model
+          // "a class" matches "a class", "a class 176", "a class amg 177", "a class w169"
+          return (
+            norm === normalizedModel ||
+            norm.startsWith(normalizedModel + " ") ||
+            norm.startsWith(normalizedModel + "/") ||
+            norm.includes(" " + normalizedModel + " ") ||
+            norm.includes(" " + normalizedModel)
+          );
         });
 
       if (matchingModels.length > 1) {
