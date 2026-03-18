@@ -134,17 +134,10 @@ export default function Header() {
                   </Button>
                 </Link>
                 {(session?.user as { role?: string })?.role === "ADMIN" && (
-                  <Link
-                    href="/admin"
-                    className={cn(
-                      "hidden sm:flex items-center gap-1 px-3 py-2 rounded-xl text-sm font-medium transition-all",
-                      isScrolled
-                        ? "text-accent hover:bg-accent/10"
-                        : "text-white hover:bg-white/10"
-                    )}
-                    title="ניהול"
-                  >
-                    <Cog6ToothIcon className="w-5 h-5" />
+                  <Link href="/admin">
+                    <Button size="sm" variant="accent" icon={<Cog6ToothIcon className="w-4 h-4" />}>
+                      ניהול
+                    </Button>
                   </Link>
                 )}
                 <button

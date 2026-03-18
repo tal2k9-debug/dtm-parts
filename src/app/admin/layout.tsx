@@ -160,13 +160,13 @@ export default function AdminLayout({
 
           {/* Footer */}
           <div className="p-4 border-t border-white/10">
-            <Link
+            <a
               href="/"
               className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-white/50 hover:text-white hover:bg-white/5 transition-all"
             >
               <ArrowRightStartOnRectangleIcon className="w-5 h-5" />
               חזרה לאתר
-            </Link>
+            </a>
           </div>
         </div>
       </aside>
