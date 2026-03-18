@@ -40,7 +40,14 @@ export default function LoginPage() {
       if (result?.error) {
         setError("שם משתמש או סיסמה שגויים");
       } else if (result?.ok === true) {
-        router.push("/catalog");
+        // Fetch session to check role and redirect accordingly
+        const res = await fetch("/api/auth/session");
+        const sess = await res.json();
+        if (sess?.user?.role === "ADMIN") {
+          router.push("/admin");
+        } else {
+          router.push("/catalog");
+        }
       } else {
         setError("שם משתמש או סיסמה שגויים");
       }

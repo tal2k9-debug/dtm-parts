@@ -13,6 +13,7 @@ import {
   UserIcon,
   HeartIcon,
   ArrowRightStartOnRectangleIcon,
+  Cog6ToothIcon,
 } from "@heroicons/react/24/outline";
 import Button from "@/components/ui/Button";
 import { useSession, signOut } from "next-auth/react";
@@ -132,6 +133,20 @@ export default function Header() {
                     החשבון שלי
                   </Button>
                 </Link>
+                {(session?.user as { role?: string })?.role === "ADMIN" && (
+                  <Link
+                    href="/admin"
+                    className={cn(
+                      "hidden sm:flex items-center gap-1 px-3 py-2 rounded-xl text-sm font-medium transition-all",
+                      isScrolled
+                        ? "text-accent hover:bg-accent/10"
+                        : "text-white hover:bg-white/10"
+                    )}
+                    title="ניהול"
+                  >
+                    <Cog6ToothIcon className="w-5 h-5" />
+                  </Link>
+                )}
                 <button
                   onClick={() => signOut({ callbackUrl: "/" })}
                   className={cn(
@@ -225,6 +240,16 @@ export default function Header() {
                 <UserIcon className="w-5 h-5" />
                 החשבון שלי
               </Link>
+              {(session?.user as { role?: string })?.role === "ADMIN" && (
+                <Link
+                  href="/admin"
+                  className="flex items-center gap-2 px-4 py-3 rounded-xl text-accent font-bold"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <Cog6ToothIcon className="w-5 h-5" />
+                  ניהול האתר
+                </Link>
+              )}
               <button
                 onClick={() => { setIsMobileMenuOpen(false); signOut({ callbackUrl: "/" }); }}
                 className="flex items-center gap-2 px-4 py-3 rounded-xl text-red-500 hover:bg-red-50 font-medium w-full"

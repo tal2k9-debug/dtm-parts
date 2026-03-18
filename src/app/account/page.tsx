@@ -7,7 +7,7 @@ import Link from "next/link";
 import Card from "@/components/ui/Card";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import { ShoppingBagIcon, DocumentTextIcon, ChatBubbleLeftRightIcon, HeartIcon, BellIcon } from "@heroicons/react/24/outline";
+import { ShoppingBagIcon, DocumentTextIcon, ChatBubbleLeftRightIcon, HeartIcon, BellIcon, PencilSquareIcon } from "@heroicons/react/24/outline";
 import { getRequestStatusLabel, getPositionLabel, formatDate } from "@/lib/utils";
 import { ADMIN_WHATSAPP_LINK } from "@/lib/constants";
 
@@ -73,7 +73,7 @@ export default function AccountPage() {
             <h1 className="text-3xl font-extrabold text-text">האזור שלי</h1>
             <p className="text-text-secondary mt-1">שלום, {session.user?.name}!</p>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6 mb-8">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-6 mb-8">
             <Link href="/catalog">
               <Card hover className="text-center py-5 sm:py-8 cursor-pointer">
                 <ShoppingBagIcon className="w-8 h-8 sm:w-10 sm:h-10 text-primary mx-auto mb-2 sm:mb-3" />
@@ -109,6 +109,13 @@ export default function AccountPage() {
                 <p className="text-sm text-text-secondary">דברו איתנו ישירות</p>
               </Card>
             </a>
+            <Link href="/account/profile">
+              <Card hover className="text-center py-5 sm:py-8 cursor-pointer">
+                <PencilSquareIcon className="w-8 h-8 sm:w-10 sm:h-10 text-indigo-500 mx-auto mb-2 sm:mb-3" />
+                <h3 className="font-bold text-text mb-1">עריכת פרטים</h3>
+                <p className="text-sm text-text-secondary">עדכון טלפון, מייל</p>
+              </Card>
+            </Link>
           </div>
           <Card>
             <div className="flex items-center justify-between mb-4">
