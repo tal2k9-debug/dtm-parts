@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { fetchBumpersFromMonday } from "@/lib/monday";
+import type { MondayBumper } from "@/lib/monday";
 import { prisma } from "@/lib/prisma";
 import { withRetry, mondayCircuit } from "@/lib/resilience";
 import { logger } from "@/lib/logger";
 import { notifyAdmin, sendWhatsApp, formatStockAlertMessage } from "@/lib/whatsapp";
+import { uploadImageToBlob, downloadImage } from "@/lib/blob";
 
 // GET /api/monday/sync — Sync bumpers from Monday.com
 // Can be called by cron job or admin manual trigger
@@ -150,14 +152,75 @@ export async function GET(request: Request) {
       }
     }
 
-    await logger.info("monday_sync", `סנכרון הושלם: ${synced} פריטים, ${errors} שגיאות, ${alertsSent} התראות מלאי`, {
-      total: bumpers.length, synced, errors, alertsSent, backInStock: backInStock.length,
+    // Auto-upload images to Blob for bumpers without blob URLs
+    // Uses publicUrl from sync response — 0 extra API calls
+    let blobUploaded = 0;
+    const bumpersNeedingBlob = bumpers.filter((b) => b.imageAssets.length > 0);
+    if (bumpersNeedingBlob.length > 0) {
+      // Find which ones don't have blob yet
+      const existingBlobs = await prisma.bumperCache.findMany({
+        where: {
+          mondayItemId: { in: bumpersNeedingBlob.map((b) => b.mondayItemId) },
+          NOT: { blobImageUrls: { isEmpty: true } },
+        },
+        select: { mondayItemId: true },
+      });
+      const hasBlob = new Set(existingBlobs.map((b) => b.mondayItemId));
+
+      const toUpload = bumpersNeedingBlob
+        .filter((b) => !hasBlob.has(b.mondayItemId))
+        .slice(0, 20); // max 20 per sync to avoid timeout
+
+      for (const bumper of toUpload) {
+        try {
+          const blobUrls: string[] = [];
+          for (const asset of bumper.imageAssets) {
+            try {
+              const buffer = await downloadImage(asset.publicUrl);
+              if (buffer.length < 1000) continue; // skip placeholders
+              const blobUrl = await uploadImageToBlob(asset.assetId, buffer);
+              blobUrls.push(blobUrl);
+            } catch { /* skip this image */ }
+          }
+          if (blobUrls.length > 0) {
+            await prisma.bumperCache.update({
+              where: { mondayItemId: bumper.mondayItemId },
+              data: { blobImageUrl: blobUrls[0], blobImageUrls: blobUrls },
+            });
+            blobUploaded++;
+          }
+        } catch { /* skip this bumper */ }
+      }
+    }
+
+    // Mark bumpers removed from Monday as "אזל"
+    // Safety: only if we got a real response (>50 items)
+    const mondayIds = new Set(bumpers.map((b) => b.mondayItemId));
+    let removed = 0;
+    if (bumpers.length > 50) {
+      for (const existing of existingBumpers) {
+        if (!mondayIds.has(existing.mondayItemId)) {
+          try {
+            await prisma.bumperCache.update({
+              where: { mondayItemId: existing.mondayItemId },
+              data: { status: "לא" },
+            });
+            removed++;
+          } catch { /* non-blocking */ }
+        }
+      }
+    }
+
+    await logger.info("monday_sync", `סנכרון הושלם: ${synced} פריטים, ${blobUploaded} הועלו ל-Blob, ${removed} סומנו כאזל, ${errors} שגיאות, ${alertsSent} התראות מלאי`, {
+      total: bumpers.length, synced, blobUploaded, removed, errors, alertsSent, backInStock: backInStock.length,
     });
 
     return NextResponse.json({
       success: true,
       total: bumpers.length,
       synced,
+      blobUploaded,
+      removed,
       errors,
       syncedAt: new Date().toISOString(),
     });

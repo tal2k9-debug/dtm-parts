@@ -15,6 +15,11 @@ interface MondayItem {
   assets?: { id: string; public_url: string }[];
 }
 
+export interface ImageAsset {
+  assetId: string;
+  publicUrl: string; // direct download URL (valid ~1 hour)
+}
+
 export interface MondayBumper {
   mondayItemId: string;
   catalogNumber: string;
@@ -26,6 +31,7 @@ export interface MondayBumper {
   condition: string;
   status: string; // "במלאי" / "אזל" (mapped from Monday "כן"/"לא")
   imageUrls: string[];
+  imageAssets: ImageAsset[]; // asset IDs + download URLs for Blob upload
 }
 
 function getColumnText(item: MondayItem, columnId: string): string {
@@ -82,6 +88,40 @@ function getFileUrls(item: MondayItem): string[] {
       });
 
     return proxyUrls;
+  }
+
+  return [];
+}
+
+// Extract image assets with both assetId and publicUrl for Blob upload
+function getImageAssets(item: MondayItem): ImageAsset[] {
+  const fileCol = item.column_values.find((c) => c.id === "file6");
+
+  // Get asset IDs from file column JSON
+  const assetIds = new Set<string>();
+  if (fileCol?.value) {
+    try {
+      const parsed = JSON.parse(fileCol.value);
+      if (parsed?.files && Array.isArray(parsed.files)) {
+        for (const f of parsed.files) {
+          if (f.assetId) assetIds.add(String(f.assetId));
+        }
+      }
+    } catch { /* ignore */ }
+  }
+
+  // Match asset IDs with public_urls from item.assets
+  if (item.assets && item.assets.length > 0) {
+    // If we have asset IDs from column, match them in order
+    if (assetIds.size > 0) {
+      return item.assets
+        .filter((a) => a.public_url && assetIds.has(String(a.id)))
+        .map((a) => ({ assetId: String(a.id), publicUrl: a.public_url }));
+    }
+    // Otherwise use all assets
+    return item.assets
+      .filter((a) => a.public_url)
+      .map((a) => ({ assetId: String(a.id), publicUrl: a.public_url }));
   }
 
   return [];
@@ -201,6 +241,7 @@ export async function fetchBumpersFromMonday(): Promise<MondayBumper[]> {
     condition: getColumnText(item, "text6"),
     status: mapStatus(getColumnText(item, "color_mkwzjzja")),
     imageUrls: getFileUrls(item),
+    imageAssets: getImageAssets(item),
   }));
 }
 
@@ -249,6 +290,7 @@ export async function fetchSingleBumperFromMonday(itemId: string): Promise<Monda
     condition: getColumnText(item, "text6"),
     status: mapStatus(getColumnText(item, "color_mkwzjzja")),
     imageUrls: getFileUrls(item),
+    imageAssets: getImageAssets(item),
   };
 }
 
