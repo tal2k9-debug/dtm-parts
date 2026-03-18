@@ -24,6 +24,12 @@ export function normalizeHebrew(text: string): string {
   // Normalize double-vav (וו → ו) for search flexibility
   result = result.replace(/וו/g, "ו");
 
+  // Normalize CLASS ↔ קלאס (Mercedes models appear as both)
+  result = result.replace(/קלאס/g, "class");
+
+  // Normalize spaces (collapse multiple, trim)
+  result = result.replace(/\s+/g, " ").trim();
+
   // Lowercase for English text (BMW, etc.)
   result = result.toLowerCase();
 
