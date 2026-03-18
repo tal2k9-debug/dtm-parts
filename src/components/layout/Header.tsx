@@ -134,11 +134,11 @@ export default function Header() {
                   </Button>
                 </Link>
                 {(session?.user as { role?: string })?.role === "ADMIN" && (
-                  <Link href="/admin">
+                  <a href="/admin">
                     <Button size="sm" variant="accent" icon={<Cog6ToothIcon className="w-4 h-4" />}>
                       ניהול
                     </Button>
-                  </Link>
+                  </a>
                 )}
                 <button
                   onClick={() => signOut({ callbackUrl: "/" })}
@@ -234,14 +234,14 @@ export default function Header() {
                 החשבון שלי
               </Link>
               {(session?.user as { role?: string })?.role === "ADMIN" && (
-                <Link
+                <a
                   href="/admin"
                   className="flex items-center gap-2 px-4 py-3 rounded-xl text-accent font-bold"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   <Cog6ToothIcon className="w-5 h-5" />
                   ניהול האתר
-                </Link>
+                </a>
               )}
               <button
                 onClick={() => { setIsMobileMenuOpen(false); signOut({ callbackUrl: "/" }); }}
