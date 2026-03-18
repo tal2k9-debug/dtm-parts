@@ -16,7 +16,7 @@ export default function PopularBumpers() {
   const [favorites, setFavorites] = useState<string[]>([]);
 
   useEffect(() => {
-    fetch("/api/bumpers?limit=12&status=instock")
+    fetch("/api/bumpers?limit=24&status=instock")
       .then((res) => res.json())
       .then((data) => {
         if (data.bumpers && Array.isArray(data.bumpers)) {
