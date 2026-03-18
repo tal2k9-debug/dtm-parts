@@ -16,7 +16,7 @@ export default function PopularBumpers() {
   const [favorites, setFavorites] = useState<string[]>([]);
 
   useEffect(() => {
-    fetch("/api/bumpers?limit=8&status=במלאי")
+    fetch("/api/bumpers?limit=12&status=instock")
       .then((res) => res.json())
       .then((data) => {
         if (data.bumpers && Array.isArray(data.bumpers)) {
@@ -76,7 +76,7 @@ export default function PopularBumpers() {
   };
 
   return (
-    <section className="py-20 bg-surface">
+    <section className="py-12 bg-surface">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -110,7 +110,7 @@ export default function PopularBumpers() {
             ))}
           </div>
         ) : bumpers.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {bumpers.map((bumper) => (
               <BumperCard key={bumper.id} bumper={bumper} isLoggedIn={isLoggedIn} isFavorited={favorites.includes(bumper.mondayItemId)} onToggleFavorite={handleToggleFavorite} />
             ))}

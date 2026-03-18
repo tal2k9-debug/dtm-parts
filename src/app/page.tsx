@@ -11,8 +11,8 @@ export default function HomePage() {
       <Header />
       <main>
         <HeroSection />
-        <FeaturesSection />
         <PopularBumpers />
+        <FeaturesSection />
         <CTASection />
       </main>
       <Footer />

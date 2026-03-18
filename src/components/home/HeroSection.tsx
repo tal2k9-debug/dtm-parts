@@ -1,11 +1,12 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Link from "next/link";
 import VehicleSelector from "./VehicleSelector";
 
 export default function HeroSection() {
   return (
-    <section className="relative min-h-[90vh] flex items-center gradient-hero overflow-hidden">
+    <section className="relative min-h-[70vh] flex items-center gradient-hero overflow-hidden">
       {/* Background pattern */}
       <div className="absolute inset-0 opacity-5">
         <div
@@ -53,32 +54,6 @@ export default function HeroSection() {
               חפשו לפי רכב וקבלו הצעת מחיר תוך דקות.
             </p>
 
-            <div className="flex flex-wrap gap-6 text-white/60 text-sm">
-              <div className="flex items-center gap-2">
-                <svg className="w-5 h-5 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                <span>משלוח לכל הארץ</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <svg className="w-5 h-5 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                <span>מחירים תחרותיים</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <svg className="w-5 h-5 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                <span>שירות אישי</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <svg className="w-5 h-5 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                <span>הזמנות מיוחדות לפי בקשה</span>
-              </div>
-            </div>
           </motion.div>
 
           {/* Vehicle Selector Card */}
@@ -90,6 +65,24 @@ export default function HeroSection() {
             <VehicleSelector />
           </motion.div>
         </div>
+
+        {/* Pulsing Catalog Button */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.8 }}
+          className="text-center mt-10"
+        >
+          <Link href="/catalog">
+            <button className="relative inline-flex items-center gap-3 bg-accent hover:bg-accent/90 text-white font-bold text-lg px-10 py-5 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+              <span className="absolute -inset-1 bg-accent/40 rounded-2xl animate-ping opacity-30" />
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+              </svg>
+              צפו במלאי טמבונים / פגושים / מגנים
+            </button>
+          </Link>
+        </motion.div>
       </div>
     </section>
   );
