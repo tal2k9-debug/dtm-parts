@@ -4,6 +4,12 @@ import { prisma } from "@/lib/prisma";
 import { withRetry, mondayCircuit } from "@/lib/resilience";
 import { logger } from "@/lib/logger";
 import { notifyAdmin, sendWhatsApp, formatStockAlertMessage } from "@/lib/whatsapp";
+import {
+  extractAssetId,
+  resolveAssetUrlsBatch,
+  downloadImage,
+  uploadImageToBlob,
+} from "@/lib/blob";
 
 // GET /api/monday/sync — Sync bumpers from Monday.com
 // Can be called by cron job or admin manual trigger
@@ -150,14 +156,120 @@ export async function GET(request: Request) {
       }
     }
 
-    await logger.info("monday_sync", `סנכרון הושלם: ${synced} פריטים, ${errors} שגיאות, ${alertsSent} התראות מלאי`, {
-      total: bumpers.length, synced, errors, alertsSent, backInStock: backInStock.length,
+    // Auto-upload images to Blob for bumpers that don't have blob URLs yet
+    let blobUploaded = 0;
+    try {
+      const bumpersWithoutBlob = await prisma.bumperCache.findMany({
+        where: {
+          blobImageUrls: { isEmpty: true },
+          imageUrls: { isEmpty: false },
+        },
+        select: { id: true, name: true, imageUrls: true },
+        take: 10, // limit per sync to avoid timeouts
+      });
+
+      if (bumpersWithoutBlob.length > 0) {
+        // Collect all asset IDs we need to resolve
+        const assetIdMap = new Map<string, { bumperId: string; catalogNumber: string; index: number }[]>();
+        for (const bumper of bumpersWithoutBlob) {
+          for (let i = 0; i < bumper.imageUrls.length; i++) {
+            const assetId = extractAssetId(bumper.imageUrls[i]);
+            if (assetId) {
+              if (!assetIdMap.has(assetId)) assetIdMap.set(assetId, []);
+              assetIdMap.get(assetId)!.push({
+                bumperId: bumper.id,
+                catalogNumber: bumper.name,
+                index: i,
+              });
+            }
+          }
+        }
+
+        // Resolve all asset IDs to download URLs in one batch call
+        const apiKey = process.env.MONDAY_API_KEY;
+        if (apiKey && assetIdMap.size > 0) {
+          const downloadUrls = await resolveAssetUrlsBatch(
+            Array.from(assetIdMap.keys()),
+            apiKey
+          );
+
+          // Group by bumper and upload
+          const bumperBlobUrls = new Map<string, { urls: string[]; catalogNumber: string }>();
+          for (const bumper of bumpersWithoutBlob) {
+            bumperBlobUrls.set(bumper.id, { urls: [], catalogNumber: bumper.name });
+          }
+
+          for (const [assetId, refs] of assetIdMap) {
+            const downloadUrl = downloadUrls.get(assetId);
+            if (!downloadUrl) continue;
+
+            try {
+              const buffer = await downloadImage(downloadUrl);
+              for (const ref of refs) {
+                const blobPath = `${ref.catalogNumber}/${ref.index + 1}`;
+                const blobUrl = await uploadImageToBlob(blobPath, buffer);
+                const entry = bumperBlobUrls.get(ref.bumperId);
+                if (entry) {
+                  // Ensure correct index order
+                  entry.urls[ref.index] = blobUrl;
+                }
+              }
+            } catch {
+              // Skip this image, continue with others
+            }
+          }
+
+          // Update DB with blob URLs
+          for (const [bumperId, { urls, catalogNumber }] of bumperBlobUrls) {
+            const cleanUrls = urls.filter(Boolean);
+            if (cleanUrls.length > 0) {
+              await prisma.bumperCache.update({
+                where: { id: bumperId },
+                data: {
+                  blobImageUrl: cleanUrls[0],
+                  blobImageUrls: cleanUrls,
+                },
+              });
+              blobUploaded++;
+              console.log(`Blob: uploaded ${cleanUrls.length} images for [${catalogNumber}]`);
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Blob auto-upload error:", err);
+      // Non-blocking — sync still succeeds
+    }
+
+    // Mark bumpers removed from Monday as "אזל" (keep images in Blob)
+    // Safety: only mark as removed if we got a reasonable number of items from Monday
+    // (prevents marking everything as "אזל" due to API failure/empty response)
+    const mondayItemIds = new Set(bumpers.map((b) => b.mondayItemId));
+    let removed = 0;
+    if (bumpers.length > 50) {
+      for (const existing of existingBumpers) {
+        if (!mondayItemIds.has(existing.mondayItemId)) {
+          try {
+            await prisma.bumperCache.update({
+              where: { mondayItemId: existing.mondayItemId },
+              data: { status: "לא" },
+            });
+            removed++;
+          } catch { /* non-blocking */ }
+        }
+      }
+    }
+
+    await logger.info("monday_sync", `סנכרון הושלם: ${synced} פריטים, ${removed} סומנו כאזל, ${blobUploaded} הועלו ל-Blob, ${errors} שגיאות, ${alertsSent} התראות מלאי`, {
+      total: bumpers.length, synced, removed, blobUploaded, errors, alertsSent, backInStock: backInStock.length,
     });
 
     return NextResponse.json({
       success: true,
       total: bumpers.length,
       synced,
+      removed,
+      blobUploaded,
       errors,
       syncedAt: new Date().toISOString(),
     });
