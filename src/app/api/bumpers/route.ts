@@ -150,7 +150,8 @@ export async function GET(request: NextRequest) {
     // Transform protected Monday URLs to proxy URLs and normalize status
     const bumpers = rawBumpers.map((b) => ({
       ...b,
-      imageUrl: transformImageUrl(b.imageUrl),
+      imageUrl: getBestImageUrl(b.blobImageUrl, b.imageUrl),
+      imageUrls: getBestImageUrls(b.blobImageUrls, b.imageUrls),
       status: normalizeStatus(b.status),
     }));
 
