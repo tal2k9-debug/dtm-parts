@@ -67,21 +67,29 @@ export async function GET(request: NextRequest) {
       }
     }
     if (model) {
-      // Same normalization for model
+      // Normalize and use "contains" matching for model
+      // e.g. searching "A CLASS" should find "A CLASS", "A CLASS 176", "A CLASS W177", etc.
       const normalizedModel = normalizeHebrew(model);
       const allModels = await prisma.bumperCache.findMany({
         select: { carModel: true },
         distinct: ["carModel"],
-        where: where.carMake ? { carMake: where.carMake as any } : undefined,
+        where: where.carMake ? { carMake: where.carMake as Prisma.StringFilter | string } : undefined,
       });
       const matchingModels = allModels
         .map((m) => m.carModel)
-        .filter((m) => normalizeHebrew(m) === normalizedModel);
+        .filter((m) => {
+          const norm = normalizeHebrew(m);
+          // Exact match OR the DB model starts with / contains the search model
+          return norm === normalizedModel || norm.startsWith(normalizedModel + " ") || norm.includes(" " + normalizedModel + " ");
+        });
 
       if (matchingModels.length > 1) {
         where.carModel = { in: matchingModels };
+      } else if (matchingModels.length === 1) {
+        where.carModel = matchingModels[0];
       } else {
-        where.carModel = matchingModels[0] || model;
+        // Fallback: use contains search
+        where.carModel = { contains: model, mode: "insensitive" };
       }
     }
     // Year filtering is handled post-query via doesYearMatch
