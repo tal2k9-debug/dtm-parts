@@ -1,11 +1,11 @@
 /**
- * One-time migration script: Download in-stock bumper images from Monday.com,
+ * Migration script: Download bumper images via our own proxy (no Monday API credits),
  * compress to WebP, upload to Vercel Blob, and update the database.
  *
  * Usage: node scripts/migrate-images-to-blob.mjs
  *
  * Resumable: re-run safely — skips bumpers that already have blobImageUrls.
- * Rate-limited: respects Monday API limits.
+ * Does NOT use Monday API — downloads via the site's own proxy endpoint.
  */
 
 import { put } from "@vercel/blob";
@@ -16,13 +16,10 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const prisma = new PrismaClient();
-const MONDAY_API_KEY = process.env.MONDAY_API_KEY;
 const BLOB_TOKEN = process.env.BLOB_READ_WRITE_TOKEN;
+// Use production URL to go through our proxy (which resolves Monday URLs)
+const SITE_URL = process.env.NEXTAUTH_URL || "https://dtm-parts.vercel.app";
 
-if (!MONDAY_API_KEY) {
-  console.error("Missing MONDAY_API_KEY in .env");
-  process.exit(1);
-}
 if (!BLOB_TOKEN) {
   console.error("Missing BLOB_READ_WRITE_TOKEN in .env");
   process.exit(1);
@@ -39,44 +36,18 @@ function extractAssetId(proxyUrl) {
   return match ? match[1] : null;
 }
 
-async function resolveAssetUrlsBatch(assetIds) {
-  const idsStr = assetIds.join(",");
-  const response = await fetch("https://api.monday.com/v2", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: MONDAY_API_KEY,
-      "API-Version": "2024-10",
-    },
-    body: JSON.stringify({
-      query: `query { assets(ids: [${idsStr}]) { id public_url } }`,
-    }),
-  });
-
-  const data = await response.json();
-
-  if (data.errors) {
-    const errMsg = data.errors[0]?.message || "";
-    if (errMsg.includes("DAILY_LIMIT_EXCEEDED")) {
-      throw new Error("DAILY_LIMIT_EXCEEDED");
-    }
-    throw new Error(`Monday API error: ${errMsg}`);
-  }
-
-  const result = new Map();
-  const assets = data.data?.assets || [];
-  for (const asset of assets) {
-    if (asset.id && asset.public_url) {
-      result.set(String(asset.id), asset.public_url);
-    }
-  }
-  return result;
-}
-
-async function downloadImage(url) {
+async function downloadImageViaProxy(assetId) {
+  // Download through our own proxy — this uses our cached Monday URLs
+  const url = `${SITE_URL}/api/images/monday/${assetId}`;
   const response = await fetch(url, { redirect: "follow" });
   if (!response.ok) {
     throw new Error(`Download failed: ${response.status}`);
+  }
+  const contentType = response.headers.get("content-type") || "";
+  if (contentType.includes("application/json")) {
+    // Probably an error response
+    const json = await response.json();
+    throw new Error(json.error || "Proxy returned JSON error");
   }
   const arrayBuffer = await response.arrayBuffer();
   return Buffer.from(arrayBuffer);
@@ -102,7 +73,7 @@ async function compressAndUpload(assetId, imageBuffer) {
 // --- Main ---
 
 async function main() {
-  console.log("=== DTM Image Migration to Vercel Blob ===\n");
+  console.log("=== DTM Image Migration to Vercel Blob (via proxy) ===\n");
 
   // 1. Get in-stock bumpers without blob images
   const bumpers = await prisma.bumperCache.findMany({
@@ -116,7 +87,8 @@ async function main() {
     orderBy: { lastSynced: "desc" },
   });
 
-  console.log(`Found ${bumpers.length} in-stock bumpers needing image migration.\n`);
+  console.log(`Found ${bumpers.length} in-stock bumpers needing image migration.`);
+  console.log(`Using proxy: ${SITE_URL}\n`);
 
   if (bumpers.length === 0) {
     console.log("Nothing to migrate!");
@@ -127,6 +99,7 @@ async function main() {
   let totalProcessed = 0;
   let totalImages = 0;
   let totalFailed = 0;
+  let consecutiveErrors = 0;
   const failures = [];
 
   for (let i = 0; i < bumpers.length; i++) {
@@ -134,60 +107,48 @@ async function main() {
     const urls = bumper.imageUrls.length > 0 ? bumper.imageUrls : (bumper.imageUrl ? [bumper.imageUrl] : []);
 
     // Extract asset IDs from proxy URLs
-    const assetEntries = [];
+    const assetIds = [];
     for (const url of urls) {
       const assetId = extractAssetId(url);
       if (assetId) {
-        assetEntries.push({ assetId, originalUrl: url });
+        assetIds.push(assetId);
       }
     }
 
-    if (assetEntries.length === 0) {
+    if (assetIds.length === 0) {
       console.log(`[${i + 1}/${bumpers.length}] ${bumper.name} — no asset IDs, skipping`);
       continue;
     }
 
-    // Resolve asset URLs from Monday API (batch)
-    const assetIds = assetEntries.map((e) => e.assetId);
-    let urlMap;
-    try {
-      urlMap = await resolveAssetUrlsBatch(assetIds);
-      await sleep(500); // Rate limit Monday API
-    } catch (err) {
-      if (err.message === "DAILY_LIMIT_EXCEEDED") {
-        console.error("\n*** DAILY LIMIT EXCEEDED — stopping. Re-run tomorrow. ***");
-        console.log(`Progress: ${totalProcessed}/${bumpers.length} bumpers, ${totalImages} images uploaded.`);
-        break;
-      }
-      console.error(`[${i + 1}] Error resolving URLs for ${bumper.name}: ${err.message}`);
-      failures.push({ bumper: bumper.name, error: err.message });
-      totalFailed++;
-      continue;
-    }
-
-    // Download, compress, upload each image
+    // Download each image via proxy, compress, upload to Blob
     const blobUrls = [];
-    for (const entry of assetEntries) {
-      const downloadUrl = urlMap.get(entry.assetId);
-      if (!downloadUrl) {
-        console.log(`  Asset ${entry.assetId} — no URL from Monday, skipping`);
-        continue;
-      }
+    let bumperFailed = false;
 
+    for (const assetId of assetIds) {
       try {
-        const buffer = await downloadImage(downloadUrl);
-        const blobUrl = await compressAndUpload(entry.assetId, buffer);
+        const buffer = await downloadImageViaProxy(assetId);
+        const blobUrl = await compressAndUpload(assetId, buffer);
         blobUrls.push(blobUrl);
         totalImages++;
-        await sleep(100); // Rate limit downloads
+        consecutiveErrors = 0;
+        await sleep(200); // Be gentle on the proxy
       } catch (err) {
-        console.log(`  Asset ${entry.assetId} — failed: ${err.message}`);
-        failures.push({ bumper: bumper.name, assetId: entry.assetId, error: err.message });
+        console.log(`  Asset ${assetId} — failed: ${err.message}`);
+        failures.push({ bumper: bumper.name, assetId, error: err.message });
         totalFailed++;
+        consecutiveErrors++;
+        bumperFailed = true;
+
+        // If too many consecutive errors, pause longer
+        if (consecutiveErrors >= 10) {
+          console.log(`\n⚠️ 10 consecutive errors — pausing 60s...\n`);
+          await sleep(60000);
+          consecutiveErrors = 0;
+        }
       }
     }
 
-    // Update DB (with retry for transient connection errors)
+    // Update DB
     if (blobUrls.length > 0) {
       for (let retry = 0; retry < 3; retry++) {
         try {
@@ -201,10 +162,10 @@ async function main() {
           break;
         } catch (dbErr) {
           if (retry < 2) {
-            console.log(`  DB write failed, retrying in 5s... (${dbErr.message.slice(0, 50)})`);
+            console.log(`  DB write failed, retrying in 5s...`);
             await sleep(5000);
           } else {
-            console.error(`  DB write failed after 3 retries: ${dbErr.message.slice(0, 80)}`);
+            console.error(`  DB write failed after 3 retries`);
             failures.push({ bumper: bumper.name, error: "DB write failed" });
             totalFailed++;
           }
@@ -214,13 +175,13 @@ async function main() {
 
     totalProcessed++;
     console.log(
-      `[${i + 1}/${bumpers.length}] ${bumper.name} — ${blobUrls.length}/${assetEntries.length} images uploaded`
+      `[${i + 1}/${bumpers.length}] ${bumper.name} — ${blobUrls.length}/${assetIds.length} images uploaded`
     );
 
-    // Pause every 100 bumpers
-    if (totalProcessed > 0 && totalProcessed % 100 === 0) {
-      console.log(`\n--- Pausing 30s after ${totalProcessed} bumpers (${totalImages} images) ---\n`);
-      await sleep(30000);
+    // Pause every 50 bumpers to avoid overloading proxy
+    if (totalProcessed > 0 && totalProcessed % 50 === 0) {
+      console.log(`\n--- Pause 15s after ${totalProcessed} bumpers (${totalImages} images) ---\n`);
+      await sleep(15000);
     }
   }
 
@@ -231,10 +192,13 @@ async function main() {
   console.log(`Failures: ${totalFailed}`);
 
   if (failures.length > 0) {
-    console.log("\nFailed items:");
-    failures.forEach((f) =>
+    console.log(`\nFailed items (${failures.length}):`);
+    failures.slice(0, 20).forEach((f) =>
       console.log(`  ${f.bumper} ${f.assetId ? `(asset ${f.assetId})` : ""} — ${f.error}`)
     );
+    if (failures.length > 20) {
+      console.log(`  ... and ${failures.length - 20} more`);
+    }
   }
 
   await prisma.$disconnect();
