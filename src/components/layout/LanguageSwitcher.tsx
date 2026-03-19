@@ -81,11 +81,14 @@ export default function LanguageSwitcher() {
 
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium hover:bg-white/10 transition-colors"
+        className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-medium hover:bg-white/10 transition-colors leading-tight"
         aria-label="שפה"
       >
-        <GlobeAltIcon className="w-4 h-4" />
-        <span className="hidden sm:inline text-xs">שפה</span>
+        <GlobeAltIcon className="w-4 h-4 flex-shrink-0" />
+        <span className="hidden sm:flex flex-col items-start">
+          <span>EN</span>
+          <span>RU</span>
+        </span>
       </button>
 
       {open && (
