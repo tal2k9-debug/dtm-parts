@@ -197,7 +197,13 @@ export async function GET(request: Request) {
           const existing = blobMap.get(b.mondayItemId);
           return !existing || !existing.blobImageUrl || existing.blobImageUrls.length === 0;
         })
-        .slice(0, 40); // max 40 new uploads per sync
+        .sort((a, b) => {
+          // Prioritize in-stock bumpers
+          const aInStock = a.status === "במלאי" || a.status === "כן" ? 0 : 1;
+          const bInStock = b.status === "במלאי" || b.status === "כן" ? 0 : 1;
+          return aInStock - bInStock;
+        })
+        .slice(0, 80); // max 80 new uploads per sync
 
       // Check for broken blobs — sample up to 10 per sync
       const toCheckRepair = bumpersWithAssets
