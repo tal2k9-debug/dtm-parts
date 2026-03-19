@@ -1,7 +1,7 @@
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import QuickRegisterBar from "@/components/layout/QuickRegisterBar";
 import HeroSection from "@/components/home/HeroSection";
-import GoogleReviewBanner from "@/components/home/GoogleReviewBanner";
 import FeaturesSection from "@/components/home/FeaturesSection";
 import PopularBumpers from "@/components/home/PopularBumpers";
 import CTASection from "@/components/home/CTASection";
@@ -9,10 +9,10 @@ import CTASection from "@/components/home/CTASection";
 export default function HomePage() {
   return (
     <>
+      <QuickRegisterBar />
       <Header />
       <main>
         <HeroSection />
-        <GoogleReviewBanner />
         <PopularBumpers />
         <FeaturesSection />
         <CTASection />
