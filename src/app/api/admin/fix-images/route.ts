@@ -5,12 +5,18 @@ import { prisma } from "@/lib/prisma";
 import { uploadImageToBlob, downloadImage, resolveAssetUrlsBatch, extractAssetId, isBlobImageValid } from "@/lib/blob";
 
 // POST /api/admin/fix-images — Re-upload broken/missing blob images for in-stock bumpers
-export async function POST() {
-  // Admin only
-  const session = await getServerSession(authOptions);
-  const role = (session?.user as Record<string, unknown> | undefined)?.role;
-  if (!session || role !== "ADMIN") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export async function POST(request: Request) {
+  // Auth: admin session OR cron secret
+  const authHeader = request.headers.get("authorization");
+  const cronSecret = process.env.CRON_SECRET;
+  const isValidCron = cronSecret && authHeader === `Bearer ${cronSecret}`;
+
+  if (!isValidCron) {
+    const session = await getServerSession(authOptions);
+    const role = (session?.user as Record<string, unknown> | undefined)?.role;
+    if (!session || role !== "ADMIN") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
   }
 
   const apiKey = process.env.MONDAY_API_KEY;
