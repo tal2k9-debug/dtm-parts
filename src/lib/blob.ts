@@ -126,3 +126,19 @@ export function extractAssetId(proxyUrl: string): string | null {
   const match = proxyUrl.match(/\/api\/images\/monday\/(\d+)/);
   return match ? match[1] : null;
 }
+
+/**
+ * Check if a blob image is valid (not broken/too small).
+ * A valid WebP image should be at least 2KB.
+ */
+export async function isBlobImageValid(blobUrl: string): Promise<boolean> {
+  try {
+    const res = await fetch(blobUrl, { method: "HEAD" });
+    if (!res.ok) return false;
+    const contentLength = parseInt(res.headers.get("content-length") || "0", 10);
+    // Images under 2KB are almost certainly broken/placeholder
+    return contentLength > 2000;
+  } catch {
+    return false;
+  }
+}

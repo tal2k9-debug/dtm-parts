@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { withRetry, mondayCircuit } from "@/lib/resilience";
 import { logger } from "@/lib/logger";
 import { notifyAdmin, sendWhatsApp, formatStockAlertMessage } from "@/lib/whatsapp";
-import { uploadImageToBlob, downloadImage } from "@/lib/blob";
+import { uploadImageToBlob, downloadImage, isBlobImageValid } from "@/lib/blob";
 
 // GET /api/monday/sync — Sync bumpers from Monday.com
 // Can be called by cron job or admin manual trigger
@@ -153,25 +153,50 @@ export async function GET(request: Request) {
     }
 
     // Auto-upload images to Blob for bumpers without blob URLs
-    // Uses publicUrl from sync response — 0 extra API calls
+    // Also auto-repair broken blob images (under 2KB)
     let blobUploaded = 0;
-    const bumpersNeedingBlob = bumpers.filter((b) => b.imageAssets.length > 0);
-    if (bumpersNeedingBlob.length > 0) {
+    let blobRepaired = 0;
+    const bumpersWithAssets = bumpers.filter((b) => b.imageAssets.length > 0);
+    if (bumpersWithAssets.length > 0) {
       // Find which ones don't have blob yet
       const existingBlobs = await prisma.bumperCache.findMany({
         where: {
-          mondayItemId: { in: bumpersNeedingBlob.map((b) => b.mondayItemId) },
-          NOT: { blobImageUrls: { isEmpty: true } },
+          mondayItemId: { in: bumpersWithAssets.map((b) => b.mondayItemId) },
         },
-        select: { mondayItemId: true },
+        select: { mondayItemId: true, blobImageUrl: true, blobImageUrls: true },
       });
-      const hasBlob = new Set(existingBlobs.map((b) => b.mondayItemId));
+      const blobMap = new Map(existingBlobs.map((b) => [b.mondayItemId, b]));
 
-      const toUpload = bumpersNeedingBlob
-        .filter((b) => !hasBlob.has(b.mondayItemId))
-        .slice(0, 20); // max 20 per sync to avoid timeout
+      // Split into: needs upload (no blob) and needs repair (has blob but might be broken)
+      const toUpload = bumpersWithAssets
+        .filter((b) => {
+          const existing = blobMap.get(b.mondayItemId);
+          return !existing || !existing.blobImageUrl || existing.blobImageUrls.length === 0;
+        })
+        .slice(0, 20); // max 20 new uploads per sync
 
-      for (const bumper of toUpload) {
+      // Check for broken blobs — sample up to 10 per sync
+      const toCheckRepair = bumpersWithAssets
+        .filter((b) => {
+          const existing = blobMap.get(b.mondayItemId);
+          return existing && existing.blobImageUrl && existing.blobImageUrls.length > 0;
+        })
+        .slice(0, 10);
+
+      const toRepair: typeof toCheckRepair = [];
+      for (const bumper of toCheckRepair) {
+        const existing = blobMap.get(bumper.mondayItemId);
+        if (existing?.blobImageUrl) {
+          const valid = await isBlobImageValid(existing.blobImageUrl);
+          if (!valid) {
+            toRepair.push(bumper);
+          }
+        }
+      }
+
+      // Upload new + repair broken
+      const allToProcess = [...toUpload, ...toRepair];
+      for (const bumper of allToProcess) {
         try {
           const blobUrls: string[] = [];
           for (const asset of bumper.imageAssets) {
@@ -187,7 +212,11 @@ export async function GET(request: Request) {
               where: { mondayItemId: bumper.mondayItemId },
               data: { blobImageUrl: blobUrls[0], blobImageUrls: blobUrls },
             });
-            blobUploaded++;
+            if (toRepair.includes(bumper)) {
+              blobRepaired++;
+            } else {
+              blobUploaded++;
+            }
           }
         } catch { /* skip this bumper */ }
       }
@@ -211,8 +240,8 @@ export async function GET(request: Request) {
       }
     }
 
-    await logger.info("monday_sync", `סנכרון הושלם: ${synced} פריטים, ${blobUploaded} הועלו ל-Blob, ${removed} סומנו כאזל, ${errors} שגיאות, ${alertsSent} התראות מלאי`, {
-      total: bumpers.length, synced, blobUploaded, removed, errors, alertsSent, backInStock: backInStock.length,
+    await logger.info("monday_sync", `סנכרון הושלם: ${synced} פריטים, ${blobUploaded} הועלו ל-Blob, ${blobRepaired} תוקנו, ${removed} סומנו כאזל, ${errors} שגיאות, ${alertsSent} התראות מלאי`, {
+      total: bumpers.length, synced, blobUploaded, blobRepaired, removed, errors, alertsSent, backInStock: backInStock.length,
     });
 
     return NextResponse.json({
@@ -220,6 +249,7 @@ export async function GET(request: Request) {
       total: bumpers.length,
       synced,
       blobUploaded,
+      blobRepaired,
       removed,
       errors,
       syncedAt: new Date().toISOString(),
