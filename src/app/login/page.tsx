@@ -19,8 +19,19 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // If already logged in, show option to stay or switch account
+  // If already logged in, redirect automatically
   const isAlreadyLoggedIn = status === "authenticated";
+
+  useEffect(() => {
+    if (isAlreadyLoggedIn && session?.user) {
+      const role = (session.user as { role?: string })?.role;
+      if (role === "ADMIN") {
+        router.push("/admin");
+      } else {
+        router.push("/catalog");
+      }
+    }
+  }, [isAlreadyLoggedIn, session, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,7 +70,7 @@ export default function LoginPage() {
   };
 
   const handleGoogleSignIn = () => {
-    signIn("google", { callbackUrl: "/catalog" });
+    signIn("google", { callbackUrl: "/" });
   };
 
   return (
@@ -75,23 +86,9 @@ export default function LoginPage() {
         <Card>
           {isAlreadyLoggedIn && (
             <div className="mb-6 p-4 bg-blue-50 rounded-xl text-center">
-              <p className="text-sm text-blue-800 mb-3">
-                מחובר כ-<strong>{session?.user?.name}</strong>
+              <p className="text-sm text-blue-800">
+                מחובר כ-<strong>{session?.user?.name}</strong> — מעביר אותך...
               </p>
-              <div className="flex gap-2 justify-center">
-                <button
-                  onClick={() => router.push("/catalog")}
-                  className="px-4 py-2 bg-primary text-white text-sm rounded-lg hover:bg-primary/90 transition-colors"
-                >
-                  המשך לאתר
-                </button>
-                <button
-                  onClick={() => signOut({ redirect: false }).then(() => window.location.reload())}
-                  className="px-4 py-2 bg-white border border-gray-300 text-sm rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  התנתק והחלף חשבון
-                </button>
-              </div>
             </div>
           )}
           <form onSubmit={handleSubmit} className="space-y-4">
