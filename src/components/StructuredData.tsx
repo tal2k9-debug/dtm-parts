@@ -5,7 +5,7 @@ export function LocalBusinessJsonLd() {
     "name": "DTM PARTS - דיטיאם פרטס",
     "alternateName": "DTM PARTS",
     "description": "פגושים, טמבונים ומגנים משומשים מייבוא לכל יצרני הרכב",
-    "url": "https://dtm-parts.vercel.app",
+    "url": "https://dtm-parts.com",
     "telephone": "+972-52-514-4401",
     "email": "info@dtmparts.co.il",
     "address": {
@@ -64,10 +64,10 @@ export function WebSiteJsonLd() {
     "@context": "https://schema.org",
     "@type": "WebSite",
     "name": "DTM PARTS",
-    "url": "https://dtm-parts.vercel.app",
+    "url": "https://dtm-parts.com",
     "potentialAction": {
       "@type": "SearchAction",
-      "target": "https://dtm-parts.vercel.app/catalog?search={search_term_string}",
+      "target": "https://dtm-parts.com/catalog?search={search_term_string}",
       "query-input": "required name=search_term_string"
     },
     "inLanguage": "he"

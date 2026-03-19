@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     siteName: "DTM PARTS",
   },
   alternates: {
-    canonical: "https://dtm-parts.vercel.app",
+    canonical: "https://dtm-parts.com",
   },
   robots: {
     index: true,
