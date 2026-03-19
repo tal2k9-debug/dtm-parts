@@ -49,7 +49,7 @@ export default function Footer() {
             </p>
             <div className="flex items-center gap-3 mt-4">
               <a
-                href="https://www.facebook.com/profile.php?id=61575aborhm"
+                href="https://www.facebook.com/DTMPARTSLTD"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-10 h-10 rounded-full bg-[#1877F2] hover:bg-[#166FE5] flex items-center justify-center transition-colors"
