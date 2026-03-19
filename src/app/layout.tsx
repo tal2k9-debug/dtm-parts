@@ -4,6 +4,7 @@ import Providers from "./Providers";
 import FloatingChat from "@/components/chat/FloatingChat";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
+import { LocalBusinessJsonLd, WebSiteJsonLd } from "@/components/StructuredData";
 import "./globals.css";
 
 const heebo = Heebo({
@@ -13,15 +14,35 @@ const heebo = Heebo({
 });
 
 export const metadata: Metadata = {
-  title: "DTM PARTS | מגוון רחב של טמבונים / פגושים / מגנים",
+  title: {
+    default: "DTM PARTS | פגושים טמבונים ומגנים משומשים מייבוא",
+    template: "%s | DTM PARTS",
+  },
   description:
-    "DTM PARTS - מגוון רחב של טמבונים, פגושים ומגנים משומשים מייבוא לכל יצרני הרכב. מחירים תחרותיים, משלוח מהיר, שירות אישי והזמנות מיוחדות לפי בקשה.",
-  keywords: ["טמבונים", "פגושים", "מגנים", "חלקי רכב", "DTM", "פגוש קדמי", "פגוש אחורי"],
+    "DTM PARTS — פגושים, טמבונים ומגנים משומשים מייבוא לכל יצרני הרכב. מלאי של 2,900+ פריטים, מחירים תחרותיים, משלוח לכל הארץ תוך 24-48 שעות. חיפה.",
+  keywords: [
+    "טמבונים", "פגושים", "מגנים", "חלקי רכב", "DTM PARTS",
+    "פגוש קדמי", "פגוש אחורי", "טמבון משומש", "פגוש מייבוא",
+    "חלקי חילוף לרכב", "פגושים משומשים", "טמבונים לביטוח",
+    "פגוש לתאונה", "חלקי רכב חיפה",
+  ],
   openGraph: {
-    title: "DTM PARTS | מגוון רחב של טמבונים / פגושים / מגנים",
-    description: "מגוון רחב של טמבונים, פגושים ומגנים משומשים מייבוא לכל יצרני הרכב",
+    title: "DTM PARTS | פגושים טמבונים ומגנים משומשים מייבוא",
+    description: "פגושים, טמבונים ומגנים משומשים מייבוא לכל יצרני הרכב. מלאי של 2,900+ פריטים, מחירים תחרותיים, משלוח לכל הארץ.",
     locale: "he_IL",
     type: "website",
+    siteName: "DTM PARTS",
+  },
+  alternates: {
+    canonical: "https://dtm-parts.vercel.app",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+    },
   },
 };
 
@@ -34,6 +55,8 @@ export default function RootLayout({
     <html lang="he" dir="rtl" className={heebo.variable}>
       <body className="font-sans antialiased">
         <GoogleAnalytics />
+        <LocalBusinessJsonLd />
+        <WebSiteJsonLd />
         <Providers>
           <ErrorBoundary>
             {children}

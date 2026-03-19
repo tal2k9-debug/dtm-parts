@@ -8,14 +8,192 @@ import Footer from "@/components/layout/Footer";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
+import BumperCard from "@/components/catalog/BumperCard";
 import { getPositionLabel, formatPrice } from "@/lib/utils";
 import { ShoppingBagIcon, PhoneIcon, TruckIcon, ArrowRightIcon, HeartIcon } from "@heroicons/react/24/outline";
 import { HeartIcon as HeartSolid } from "@heroicons/react/24/solid";
 import { ADMIN_WHATSAPP_LINK, ADMIN_PHONE_INTL } from "@/lib/constants";
+import { getManufacturerBySlug } from "@/lib/manufacturers";
 import type { Bumper, BumperStatus } from "@/types";
 
 export default function CatalogDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const manufacturer = getManufacturerBySlug(id);
+
+  if (manufacturer) {
+    return <ManufacturerPage manufacturer={manufacturer} />;
+  }
+
+  return <BumperDetailPage id={id} />;
+}
+
+// ===== MANUFACTURER LANDING PAGE =====
+function ManufacturerPage({ manufacturer }: { manufacturer: { slug: string; nameHe: string; nameEn: string; description: string; popularModels: string[] } }) {
+  const { data: session } = useSession();
+  const isLoggedIn = !!session?.user;
+  const [bumpers, setBumpers] = useState<Bumper[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [favorites, setFavorites] = useState<string[]>([]);
+
+  useEffect(() => {
+    fetch(`/api/bumpers?make=${encodeURIComponent(manufacturer.nameHe)}&limit=24&page=1&status=instock`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.bumpers) {
+          setBumpers(data.bumpers);
+          setTotal(data.pagination?.total || data.bumpers.length);
+        }
+      })
+      .catch((err) => console.error(err))
+      .finally(() => setLoading(false));
+  }, [manufacturer.nameHe]);
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    fetch("/api/favorites")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.favorites && Array.isArray(data.favorites)) {
+          setFavorites(data.favorites);
+        }
+      })
+      .catch(() => {});
+  }, [isLoggedIn]);
+
+  const handleToggleFavorite = async (bumperId: string) => {
+    const isFav = favorites.includes(bumperId);
+    setFavorites((prev) => isFav ? prev.filter((id) => id !== bumperId) : [...prev, bumperId]);
+    try {
+      const res = await fetch("/api/favorites", {
+        method: isFav ? "DELETE" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bumperId }),
+      });
+      if (!res.ok) setFavorites((prev) => isFav ? [...prev, bumperId] : prev.filter((id) => id !== bumperId));
+    } catch {
+      setFavorites((prev) => isFav ? [...prev, bumperId] : prev.filter((id) => id !== bumperId));
+    }
+  };
+
+  const loadMore = async () => {
+    if (loadingMore) return;
+    setLoadingMore(true);
+    const nextPage = page + 1;
+    try {
+      const res = await fetch(`/api/bumpers?make=${encodeURIComponent(manufacturer.nameHe)}&limit=24&page=${nextPage}&status=instock`);
+      const data = await res.json();
+      if (data.bumpers) {
+        setBumpers((prev) => [...prev, ...data.bumpers]);
+        setPage(nextPage);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  return (
+    <>
+      <Header />
+      <main className="pt-24 pb-16 min-h-screen bg-background">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Breadcrumbs */}
+          <nav className="flex items-center gap-2 text-sm text-text-secondary mb-6">
+            <Link href="/" className="hover:text-primary transition-colors">ראשי</Link>
+            <span>/</span>
+            <Link href="/catalog" className="hover:text-primary transition-colors">קטלוג</Link>
+            <span>/</span>
+            <span className="text-text font-medium">{manufacturer.nameHe}</span>
+          </nav>
+
+          {/* SEO Content Header */}
+          <div className="bg-gradient-to-l from-primary/5 to-primary/10 rounded-2xl p-6 sm:p-8 mb-8 border border-primary/10">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-text mb-3">
+              פגושים וטמבונים ל{manufacturer.nameHe} — DTM PARTS
+            </h1>
+            <p className="text-text-secondary text-base sm:text-lg leading-relaxed mb-4 max-w-3xl">
+              DTM PARTS מתמחה בייבוא פגושים, טמבונים ומגנים משומשים ל{manufacturer.nameHe}.
+              {total > 0 ? ` כרגע ${total} פריטים במלאי` : " מלאי מתעדכן בזמן אמת"}.
+              כל הפריטים עוברים בדיקה לפני שליחה. דגמים פופולריים: {manufacturer.description}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {manufacturer.popularModels.map((model) => (
+                <span key={model} className="bg-white/80 text-text text-sm px-3 py-1.5 rounded-full border border-border">
+                  {manufacturer.nameHe} {model}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Bumper Grid */}
+          {loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="bg-surface rounded-2xl border border-border p-4">
+                  <div className="shimmer h-48 rounded-xl mb-4" />
+                  <div className="shimmer h-5 w-3/4 rounded mb-3" />
+                  <div className="shimmer h-4 w-1/2 rounded" />
+                </div>
+              ))}
+            </div>
+          ) : bumpers.length > 0 ? (
+            <>
+              <p className="text-text-secondary text-sm mb-4">
+                {total} פגושים וטמבונים ל{manufacturer.nameHe} במלאי
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {bumpers.map((bumper) => (
+                  <BumperCard key={bumper.id} bumper={bumper} isLoggedIn={isLoggedIn} isFavorited={favorites.includes(bumper.mondayItemId)} onToggleFavorite={handleToggleFavorite} />
+                ))}
+              </div>
+              {bumpers.length < total && (
+                <div className="mt-8 text-center">
+                  <button
+                    onClick={loadMore}
+                    disabled={loadingMore}
+                    className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-white font-bold text-base px-8 py-3.5 rounded-xl shadow-md hover:shadow-lg transition-all disabled:opacity-50"
+                  >
+                    {loadingMore ? "טוען..." : "הציגו עוד טמבונים"}
+                  </button>
+                  <p className="text-text-secondary text-xs mt-2">מציג {bumpers.length} מתוך {total}</p>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="text-center py-16">
+              <h2 className="text-xl font-bold text-text mb-2">אין פגושים ל{manufacturer.nameHe} במלאי כרגע</h2>
+              <p className="text-text-secondary mb-6">שלחו בקשה ונמצא עבורכם</p>
+              <Link href={`/quote?make=${encodeURIComponent(manufacturer.nameHe)}`}>
+                <Button variant="primary" size="lg">שלחו בקשת מחיר</Button>
+              </Link>
+            </div>
+          )}
+
+          {/* SEO footer text */}
+          <div className="mt-12 bg-surface rounded-2xl border border-border p-6">
+            <h2 className="text-lg font-bold text-text mb-3">
+              קניית פגושים וטמבונים ל{manufacturer.nameHe} ב-DTM PARTS
+            </h2>
+            <p className="text-text-secondary text-sm leading-relaxed">
+              DTM PARTS היא חנות חלקי חילוף לרכב המתמחה בפגושים, טמבונים ומגנים משומשים מייבוא.
+              אנו מציעים מגוון רחב של פגושים ל{manufacturer.nameHe} — קדמיים ואחוריים, לדגמים כמו {manufacturer.description}.
+              כל הפריטים עוברים בדיקת איכות לפני שליחה, והמשלוח מתבצע לכל הארץ תוך 24-48 שעות.
+              לא מצאתם את מה שחיפשתם? שלחו לנו בקשה ונמצא עבורכם.
+            </p>
+          </div>
+        </div>
+      </main>
+      <Footer />
+    </>
+  );
+}
+
+// ===== BUMPER DETAIL PAGE =====
+function BumperDetailPage({ id }: { id: string }) {
   const { data: session } = useSession();
   const isLoggedIn = !!session?.user;
   const [bumper, setBumper] = useState<Bumper | null>(null);
@@ -137,13 +315,12 @@ export default function CatalogDetailPage({ params }: { params: Promise<{ id: st
                 {(bumper.imageUrls?.length > 0 || bumper.imageUrl) ? (
                   <img
                     src={bumper.imageUrls?.[selectedImage] || bumper.imageUrl || ""}
-                    alt={bumper.name}
+                    alt={`פגוש ${bumper.carMake} ${bumper.carModel} ${bumper.carYear} - ${bumper.name}`}
                     className="w-full h-full object-contain"
                   />
                 ) : (
                   <TruckIcon className="w-24 h-24 text-gray-300" />
                 )}
-                {/* Floating favorite button on image */}
                 {isLoggedIn && (
                   <button
                     onClick={toggleFavorite}

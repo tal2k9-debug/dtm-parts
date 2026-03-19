@@ -1,5 +1,12 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import CatalogContent from "./CatalogContent";
+
+export const metadata: Metadata = {
+  title: "קטלוג פגושים וטמבונים משומשים מייבוא",
+  description:
+    "חפשו פגושים, טמבונים ומגנים משומשים מייבוא לכל יצרני הרכב. סינון לפי יצרן, דגם, שנה ומיקום. מלאי מתעדכן בזמן אמת.",
+};
 
 export default function CatalogPage() {
   return (
