@@ -47,6 +47,7 @@ export const POPULAR_MAKES = [
 export const NAV_LINKS = [
   { href: "/", label: "ראשי" },
   { href: "/catalog", label: "קטלוג" },
+  { href: "/about", label: "אודות" },
   { href: "/account", label: "האזור שלי" },
 ];
 
