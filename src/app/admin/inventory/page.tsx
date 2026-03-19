@@ -29,6 +29,7 @@ interface Bumper {
 export default function AdminInventoryPage() {
   const [syncing, setSyncing] = useState(false);
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "instock" | "outofstock">("all");
   const [bumpers, setBumpers] = useState<Bumper[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -140,6 +141,10 @@ export default function AdminInventoryPage() {
   };
 
   const filtered = bumpers.filter((b) => {
+    // Status filter
+    if (statusFilter === "instock" && b.status !== "במלאי" && b.status !== "כן") return false;
+    if (statusFilter === "outofstock" && b.status !== "אזל" && b.status !== "לא") return false;
+    // Search filter
     if (!search) return true;
     return b.name.includes(search) || b.carMake.includes(search) || b.carModel.includes(search);
   });
@@ -175,6 +180,30 @@ export default function AdminInventoryPage() {
           />
         </div>
       </Card>
+      {/* Status filter tabs */}
+      <div className="flex gap-2">
+        {([
+          { key: "all" as const, label: "הכל", count: bumpers.length },
+          { key: "instock" as const, label: "במלאי", count: bumpers.filter(b => b.status === "במלאי" || b.status === "כן").length },
+          { key: "outofstock" as const, label: "אזל", count: bumpers.filter(b => b.status === "אזל" || b.status === "לא").length },
+        ]).map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setStatusFilter(tab.key)}
+            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+              statusFilter === tab.key
+                ? tab.key === "instock"
+                  ? "bg-green-500 text-white shadow-sm"
+                  : tab.key === "outofstock"
+                  ? "bg-red-500 text-white shadow-sm"
+                  : "bg-primary text-white shadow-sm"
+                : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
+            }`}
+          >
+            {tab.label} ({tab.count})
+          </button>
+        ))}
+      </div>
       <Card padding="none">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
