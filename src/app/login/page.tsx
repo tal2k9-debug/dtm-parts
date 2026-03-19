@@ -74,8 +74,13 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen relative flex items-center justify-center px-4">
+      {/* Background image */}
+      <div className="absolute inset-0 z-0">
+        <img src="/images/DTM.png" alt="" className="w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-black/60" />
+      </div>
+      <div className="w-full max-w-md relative z-10">
         <div className="text-center mb-8">
           <Link href="/" className="inline-block mb-4">
             <Image src="/images/logo.jpeg" alt={SITE_NAME} width={80} height={80} className="rounded-full mx-auto" />

@@ -49,8 +49,10 @@ export default function HeroSection() {
               <span className="text-primary-light">במחיר הנכון</span>
             </h1>
 
-            <p className="text-base sm:text-lg text-white/70 leading-relaxed mb-6 max-w-lg">
-              מגוון רחב של טמבונים, פגושים ומגנים במלאי, לכל יצרני הרכב.
+            <p className="text-base sm:text-lg text-white/80 leading-relaxed mb-3 max-w-lg">
+              מעל 1,000 טמבונים משומשים מייבוא זמינים במלאי, לכל יצרני הרכב.
+            </p>
+            <p className="text-sm sm:text-base text-white/60 leading-relaxed mb-6 max-w-lg">
               חפשו לפי רכב וקבלו הצעת מחיר תוך דקות.
             </p>
 
@@ -89,7 +91,7 @@ export default function HeroSection() {
             href="https://www.google.co.il/search?q=%D7%93%D7%99%D7%98%D7%99%D7%90%D7%9D+%D7%A4%D7%A8%D7%98%D7%A1+%D7%97%D7%99%D7%A4%D7%94+%D7%91%D7%99%D7%A7%D7%95%D7%A8%D7%AA"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl px-6 py-4 hover:bg-white/20 transition-all group"
+            className="inline-flex items-center gap-2 bg-white/90 backdrop-blur-sm border border-white rounded-2xl px-6 py-4 hover:bg-white transition-all group shadow-lg"
           >
             <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
@@ -102,8 +104,8 @@ export default function HeroSection() {
                 <svg key={i} className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
               ))}
             </div>
-            <span className="text-white font-bold text-sm">5.0</span>
-            <span className="text-yellow-300 font-bold text-sm group-hover:text-yellow-200">דרגו אותנו!</span>
+            <span className="text-gray-800 font-bold text-sm">5.0</span>
+            <span className="text-primary font-bold text-sm">דרגו אותנו!</span>
           </a>
         </motion.div>
       </div>

@@ -32,6 +32,14 @@ export const metadata: Metadata = {
     locale: "he_IL",
     type: "website",
     siteName: "DTM PARTS",
+    images: [
+      {
+        url: "/images/DTM.png",
+        width: 1200,
+        height: 630,
+        alt: "DTM PARTS — פגושים וטמבונים משומשים מייבוא",
+      },
+    ],
   },
   alternates: {
     canonical: "https://dtm-parts.com",
