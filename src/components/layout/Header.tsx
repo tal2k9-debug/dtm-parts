@@ -16,6 +16,7 @@ import {
   Cog6ToothIcon,
 } from "@heroicons/react/24/outline";
 import Button from "@/components/ui/Button";
+import LanguageSwitcher from "@/components/layout/LanguageSwitcher";
 import { useSession, signOut } from "next-auth/react";
 
 export default function Header() {
@@ -94,6 +95,7 @@ export default function Header() {
 
           {/* CTA + Mobile Toggle */}
           <div className="flex items-center gap-3">
+            <LanguageSwitcher />
             <a
               href={`tel:${ADMIN_PHONE_INTL}`}
               className={cn(
