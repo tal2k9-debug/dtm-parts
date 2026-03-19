@@ -99,7 +99,7 @@ export default function RegisterPage() {
         <Card>
           {/* Step 1: Choose customer type */}
           {!customerType && (
-            <div className="space-y-4">
+            <div className="space-y-3">
               <p className="text-center text-text-secondary mb-2">בחר סוג חשבון:</p>
               <button
                 type="button"
@@ -127,6 +127,12 @@ export default function RegisterPage() {
                   </div>
                 </div>
               </button>
+
+              <Link href="/login" className="block">
+                <div className="w-full p-4 rounded-xl border-2 border-accent/30 bg-accent/5 hover:border-accent hover:bg-accent/10 transition-all duration-200 text-center">
+                  <p className="font-bold text-accent text-lg">כבר יש לך חשבון? התחבר</p>
+                </div>
+              </Link>
             </div>
           )}
 
