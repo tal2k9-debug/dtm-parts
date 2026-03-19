@@ -42,7 +42,7 @@ export const metadata: Metadata = {
     ],
   },
   alternates: {
-    canonical: "https://dtm-parts.com",
+    canonical: "https://dtmparts.co.il",
   },
   robots: {
     index: true,

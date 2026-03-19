@@ -1,7 +1,7 @@
 import { MetadataRoute } from "next";
 import { prisma } from "@/lib/prisma";
 
-const BASE_URL = process.env.NEXTAUTH_URL || "https://dtm-parts.com";
+const BASE_URL = process.env.NEXTAUTH_URL || "https://dtmparts.co.il";
 
 // Manufacturer slugs mapping
 const MANUFACTURERS: Record<string, string> = {
