@@ -154,10 +154,9 @@ export default function Header() {
                 </button>
               </>
             ) : (
-              <Link href="/register" className="relative">
-                <span className="absolute -inset-1 bg-accent/40 rounded-xl animate-ping opacity-25" />
+              <Link href="/register">
                 <Button size="sm" variant={isScrolled ? "outline" : "accent"} icon={<UserPlusIcon className="w-4 h-4" />}>
-                  הרשמה — 10% הנחה
+                  הרשמה / התחברות
                 </Button>
               </Link>
             )}
@@ -258,7 +257,7 @@ export default function Header() {
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 <UserPlusIcon className="w-5 h-5" />
-                הירשם וקבל 10% הנחה!
+                הרשמה / התחברות
               </Link>
             )}
           </div>

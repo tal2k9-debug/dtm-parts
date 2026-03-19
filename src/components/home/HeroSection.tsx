@@ -66,19 +66,30 @@ export default function HeroSection() {
           </motion.div>
         </div>
 
-        {/* Google Review + Catalog Button */}
+        {/* Google Review + Catalog Button — side by side */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.8 }}
-          className="flex flex-col items-center gap-4 mt-6"
+          className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-6"
         >
+          {/* Catalog Button */}
+          <Link href="/catalog">
+            <button className="relative inline-flex items-center gap-3 bg-accent hover:bg-accent/90 text-white font-bold text-base px-8 py-4 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+              <span className="absolute -inset-1 bg-accent/40 rounded-2xl animate-ping opacity-30" />
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+              </svg>
+              צפו במלאי טמבונים
+            </button>
+          </Link>
+
           {/* Google Review */}
           <a
             href="https://www.google.co.il/search?q=%D7%93%D7%99%D7%98%D7%99%D7%90%D7%9D+%D7%A4%D7%A8%D7%98%D7%A1+%D7%97%D7%99%D7%A4%D7%94+%D7%91%D7%99%D7%A7%D7%95%D7%A8%D7%AA"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-5 py-2.5 hover:bg-white/20 transition-all group"
+            className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl px-6 py-4 hover:bg-white/20 transition-all group"
           >
             <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
@@ -92,20 +103,8 @@ export default function HeroSection() {
               ))}
             </div>
             <span className="text-white font-bold text-sm">5.0</span>
-            <span className="text-white/60 text-sm">(19 ביקורות)</span>
-            <span className="text-yellow-300 font-bold text-sm group-hover:text-yellow-200">⭐ דרגו אותנו!</span>
+            <span className="text-yellow-300 font-bold text-sm group-hover:text-yellow-200">דרגו אותנו!</span>
           </a>
-
-          {/* Catalog Button */}
-          <Link href="/catalog">
-            <button className="relative inline-flex items-center gap-3 bg-accent hover:bg-accent/90 text-white font-bold text-lg px-10 py-5 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-              <span className="absolute -inset-1 bg-accent/40 rounded-2xl animate-ping opacity-30" />
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-              </svg>
-              צפו במלאי טמבונים / פגושים / מגנים
-            </button>
-          </Link>
         </motion.div>
       </div>
     </section>
