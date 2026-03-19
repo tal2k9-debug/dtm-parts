@@ -2,12 +2,7 @@
 
 import { StarIcon } from "@heroicons/react/24/solid";
 
-// Direct Google review link - search that opens the business panel
 const GOOGLE_REVIEW_URL =
-  "https://search.google.com/local/writereview?placeid=ChIJXXXXXXXXXXXXXXXXXXXXXXX";
-
-// Fallback: opens Google search with the business
-const GOOGLE_SEARCH_URL =
   "https://www.google.co.il/search?q=%D7%93%D7%99%D7%98%D7%99%D7%90%D7%9D+%D7%A4%D7%A8%D7%98%D7%A1+%D7%97%D7%99%D7%A4%D7%94+%D7%91%D7%99%D7%A7%D7%95%D7%A8%D7%AA";
 
 export default function GoogleReviewBanner() {
@@ -15,7 +10,7 @@ export default function GoogleReviewBanner() {
     <section className="py-6 bg-gradient-to-l from-blue-50 via-white to-blue-50 border-y border-blue-100">
       <div className="container mx-auto px-4">
         <a
-          href={GOOGLE_SEARCH_URL}
+          href={GOOGLE_REVIEW_URL}
           target="_blank"
           rel="noopener noreferrer"
           className="flex flex-col sm:flex-row items-center justify-center gap-4 group cursor-pointer"
