@@ -76,16 +76,16 @@ export default function PopularBumpers() {
   };
 
   return (
-    <section className="py-12 bg-surface">
+    <section className="py-6 bg-surface">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="flex items-end justify-between mb-10"
+          className="flex items-end justify-between mb-5"
         >
           <div>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-text mb-2">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-text mb-1">
               טמבונים פופולריים
             </h2>
             <p className="text-text-secondary text-lg">

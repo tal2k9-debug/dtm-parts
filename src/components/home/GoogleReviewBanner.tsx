@@ -7,7 +7,7 @@ const GOOGLE_REVIEW_URL =
 
 export default function GoogleReviewBanner() {
   return (
-    <section className="py-6 bg-gradient-to-l from-blue-50 via-white to-blue-50 border-y border-blue-100">
+    <section className="py-3 bg-gradient-to-l from-blue-50 via-white to-blue-50 border-y border-blue-100">
       <div className="container mx-auto px-4">
         <a
           href={GOOGLE_REVIEW_URL}
