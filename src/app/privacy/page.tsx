@@ -116,41 +116,12 @@ export default function PrivacyPage() {
                 למטרות שיווק. המידע עשוי להיות מועבר לגורמים הבאים אך ורק לצורך
                 תפעול האתר:
               </p>
-              <ul className="list-disc list-inside mt-3 space-y-2 pr-4">
-                <li>
-                  <strong>Vercel</strong> — שירות אירוח האתר. השרתים ממוקמים
-                  בחו&quot;ל. Vercel פועלת בהתאם לתקני אבטחה מחמירים.
-                </li>
-                <li>
-                  <strong>Neon (PostgreSQL)</strong> — שירות מסד הנתונים בו
-                  נשמרים פרטי הלקוחות וההזמנות.
-                </li>
-                <li>
-                  <strong>Monday.com</strong> — מערכת ניהול מלאי. משמשת לסנכרון
-                  נתוני מלאי פגושים בלבד. פרטי לקוחות אינם מועברים ל-Monday.com.
-                </li>
-                <li>
-                  <strong>Google Analytics</strong> — ניתוח שימוש באתר. נאסף מידע
-                  אנונימי ומצרפי בלבד על דפוסי גלישה. ראו{" "}
-                  <a
-                    href="https://policies.google.com/privacy"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary hover:underline"
-                  >
-                    מדיניות הפרטיות של Google
-                  </a>
-                  .
-                </li>
-                <li>
-                  <strong>Twilio</strong> — שירות שליחת הודעות WhatsApp. משמש
-                  לשליחת התראות פנימיות למנהל העסק בלבד, ולא לשליחת הודעות
-                  ללקוחות.
-                </li>
-                <li>
-                  <strong>Pusher</strong> — שירות תקשורת בזמן אמת לצ&apos;אט באתר.
-                </li>
-              </ul>
+              <p className="mt-3">
+                אנו משתמשים בספקי שירותים חיצוניים לצורך אירוח האתר, אחסון מידע,
+                ניתוח סטטיסטי וניהול מלאי. ספקים אלה פועלים בהתאם לתקני אבטחה
+                מחמירים ומחויבים לשמור על סודיות המידע. פרטי לקוחות אינם נמכרים
+                או מועברים לצדדים שלישיים לשום מטרה שיווקית.
+              </p>
               <p className="mt-3">
                 בנוסף, עשויים להעביר מידע לרשויות מוסמכות ככל שנדרש על פי דין.
               </p>
