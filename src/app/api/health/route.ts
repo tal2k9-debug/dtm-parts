@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCircuitStates } from "@/lib/resilience";
 import { logger } from "@/lib/logger";
+import { isBlobImageValid } from "@/lib/blob";
+import { notifyAdmin } from "@/lib/whatsapp";
 
 // POST /api/health — Receive client-side error reports
 export async function POST(request: Request) {
@@ -131,6 +133,40 @@ export async function GET(request: Request) {
 
   const circuits = getCircuitStates();
 
+  // Check blob images coverage + spot check
+  let blobCheck = { ok: true, coverage: "N/A", sampleOk: true, details: "" };
+  try {
+    const inStock = await prisma.bumperCache.count({ where: { status: { in: ["כן", "במלאי"] } } });
+    const withBlob = await prisma.bumperCache.count({
+      where: { status: { in: ["כן", "במלאי"] }, blobImageUrl: { not: null } },
+    });
+    const coveragePct = inStock > 0 ? Math.round((withBlob / inStock) * 100) : 0;
+
+    // Spot-check a random blob image
+    const sample = await prisma.bumperCache.findFirst({
+      where: { blobImageUrl: { not: null } },
+      select: { blobImageUrl: true },
+      skip: Math.floor(Math.random() * Math.min(withBlob, 100)),
+    });
+    const sampleOk = sample?.blobImageUrl ? await isBlobImageValid(sample.blobImageUrl) : false;
+
+    blobCheck = {
+      ok: coveragePct > 50 && sampleOk,
+      coverage: `${withBlob}/${inStock} (${coveragePct}%)`,
+      sampleOk,
+      details: !sampleOk ? "תמונה לדוגמה שבורה" : coveragePct < 50 ? "כיסוי תמונות נמוך" : "",
+    };
+  } catch { blobCheck = { ok: false, coverage: "error", sampleOk: false, details: "שגיאה בבדיקה" }; }
+
+  // Check WhatsApp/Twilio
+  const twilioOk = !!(
+    process.env.TWILIO_ACCOUNT_SID &&
+    process.env.TWILIO_AUTH_TOKEN &&
+    process.env.TWILIO_WHATSAPP_FROM &&
+    process.env.ADMIN_WHATSAPP_TO
+  );
+  const blobTokenOk = !!process.env.BLOB_READ_WRITE_TOKEN;
+
   const overallOk = db.ok && monday.ok;
   const status = !db.ok ? "down" : !monday.ok || !sync.ok ? "degraded" : "healthy";
 
@@ -143,12 +179,22 @@ export async function GET(request: Request) {
         mondayOk: monday.ok,
         pusherOk: true, // passive check
         responseMs: Date.now() - start,
-        details: JSON.stringify({ sync, circuits }),
+        details: JSON.stringify({ sync, circuits, blob: blobCheck }),
       },
     });
   } catch { /* non-critical */ }
 
-  // Alert if degraded/down
+  // Collect problems for alert
+  const problems: string[] = [];
+  if (!db.ok) problems.push(`❌ מסד נתונים: ${db.error}`);
+  if (!monday.ok) problems.push(`❌ Monday API: ${monday.error}`);
+  if (!sync.ok) problems.push(`⚠️ סנכרון: סנכרון אחרון לא עדכני`);
+  if (!blobCheck.ok) problems.push(`⚠️ תמונות: ${blobCheck.details || blobCheck.coverage}`);
+  if (!blobTokenOk) problems.push(`❌ BLOB_READ_WRITE_TOKEN חסר`);
+  if (!twilioOk) problems.push(`⚠️ WhatsApp (Twilio) לא מוגדר`);
+  if (errors && errors.criticalCount > 0) problems.push(`🚨 ${errors.criticalCount} שגיאות קריטיות`);
+
+  // Alert if degraded/down — send WhatsApp
   if (status === "down") {
     await logger.critical("health", `מערכת DOWN — DB: ${db.ok}, Monday: ${monday.ok}`, {
       db: db.error,
@@ -156,6 +202,21 @@ export async function GET(request: Request) {
     });
   } else if (status === "degraded") {
     await logger.warn("health", `מערכת degraded — sync: ${sync.ok}, Monday: ${monday.ok}`);
+  }
+
+  // Send daily health report via WhatsApp (only when called by cron)
+  if (isValidCron) {
+    try {
+      if (problems.length > 0) {
+        await notifyAdmin(
+          `🔴 בדיקה יומית — ${problems.length} בעיות:\n${problems.join("\n")}\n\nhttps://dtmparts.co.il/admin`
+        );
+      } else {
+        await notifyAdmin(
+          `🟢 בדיקה יומית — הכל תקין!\n✅ מסד נתונים\n✅ Monday סנכרון\n✅ תמונות: ${blobCheck.coverage}\n✅ BLOB Token\n${twilioOk ? "✅" : "⚠️"} WhatsApp`
+        );
+      }
+    } catch { /* WhatsApp might be the problem */ }
   }
 
   const responseData: Record<string, unknown> = {
@@ -166,8 +227,12 @@ export async function GET(request: Request) {
       database: { ok: db.ok, latencyMs: db.latencyMs },
       monday: { ok: monday.ok, latencyMs: monday.latencyMs },
       sync: { ok: sync.ok, lastSync: sync.lastSync, itemCount: sync.itemCount },
+      blob: blobCheck,
+      blobToken: blobTokenOk,
+      whatsapp: twilioOk,
       circuits,
     },
+    problems: problems.length > 0 ? problems : undefined,
   };
 
   // Include error details only for authenticated users
