@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { HeartIcon } from "@heroicons/react/24/outline";
@@ -44,6 +45,7 @@ interface BumperCardProps {
 
 export default function BumperCard({ bumper, isLoggedIn, isFavorited, onToggleFavorite }: BumperCardProps) {
   const router = useRouter();
+  const [imgError, setImgError] = useState(false);
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -68,12 +70,13 @@ export default function BumperCard({ bumper, isLoggedIn, isFavorited, onToggleFa
         <div className="group bg-surface rounded-2xl border border-border overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
           {/* Image */}
           <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
-            {bumper.imageUrl ? (
+            {bumper.imageUrl && !imgError ? (
               <img
                 src={bumper.imageUrl}
                 alt={bumper.name}
                 className="absolute inset-0 w-full h-full object-contain bg-gray-50 group-hover:scale-105 transition-transform duration-500"
                 loading="lazy"
+                onError={() => setImgError(true)}
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-text-muted">
