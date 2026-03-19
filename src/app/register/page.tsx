@@ -100,7 +100,14 @@ export default function RegisterPage() {
           {/* Step 1: Choose customer type */}
           {!customerType && (
             <div className="space-y-3">
-              <p className="text-center text-text-secondary mb-2">בחר סוג חשבון:</p>
+              <Link href="/login" className="block">
+                <div className="w-full p-4 rounded-xl border-2 border-accent/30 bg-accent/5 hover:border-accent hover:bg-accent/10 transition-all duration-200 text-center">
+                  <p className="font-bold text-accent text-lg">כבר יש לך חשבון? התחבר</p>
+                </div>
+              </Link>
+
+              <p className="text-center text-text-secondary pt-2">הרשמה:</p>
+
               <button
                 type="button"
                 onClick={() => { setCustomerType("private"); updateField("businessType", "private"); }}
@@ -109,7 +116,7 @@ export default function RegisterPage() {
                 <div className="flex items-center gap-3">
                   <UserIcon className="w-8 h-8 text-primary" />
                   <div>
-                    <p className="font-bold text-text text-lg">לקוח פרטי</p>
+                    <p className="font-bold text-text text-lg">לקוח פרטי — הרשמה</p>
                     <p className="text-sm text-text-secondary">רכישה אישית של חלקים</p>
                   </div>
                 </div>
@@ -122,17 +129,11 @@ export default function RegisterPage() {
                 <div className="flex items-center gap-3">
                   <BuildingStorefrontIcon className="w-8 h-8 text-primary" />
                   <div>
-                    <p className="font-bold text-text text-lg">לקוח עסקי</p>
+                    <p className="font-bold text-text text-lg">לקוח עסקי — הרשמה</p>
                     <p className="text-sm text-text-secondary">מוסך, חברת ליסינג, סוכנות רכב, פחחות וכו׳</p>
                   </div>
                 </div>
               </button>
-
-              <Link href="/login" className="block">
-                <div className="w-full p-4 rounded-xl border-2 border-accent/30 bg-accent/5 hover:border-accent hover:bg-accent/10 transition-all duration-200 text-center">
-                  <p className="font-bold text-accent text-lg">כבר יש לך חשבון? התחבר</p>
-                </div>
-              </Link>
             </div>
           )}
 
@@ -274,17 +275,6 @@ export default function RegisterPage() {
             התחבר עם Google
           </button>
 
-          <div className="mt-6 text-center">
-            <p className="text-sm text-text-secondary">
-              כבר יש לך חשבון?{" "}
-              <Link
-                href="/login"
-                className="text-primary font-medium hover:underline"
-              >
-                התחבר
-              </Link>
-            </p>
-          </div>
         </Card>
         <p className="text-center mt-6">
           <Link
