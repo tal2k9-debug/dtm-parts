@@ -153,9 +153,11 @@ export async function GET(request: Request) {
     }
 
     // Auto-upload images to Blob for bumpers without blob URLs
+    // Also detect changed images (new asset IDs) and re-upload
     // Also auto-repair broken blob images (under 2KB)
     let blobUploaded = 0;
     let blobRepaired = 0;
+    let blobUpdated = 0;
     const bumpersWithAssets = bumpers.filter((b) => b.imageAssets.length > 0);
     if (bumpersWithAssets.length > 0) {
       // Find which ones don't have blob yet
@@ -163,17 +165,39 @@ export async function GET(request: Request) {
         where: {
           mondayItemId: { in: bumpersWithAssets.map((b) => b.mondayItemId) },
         },
-        select: { mondayItemId: true, blobImageUrl: true, blobImageUrls: true },
+        select: { mondayItemId: true, blobImageUrl: true, blobImageUrls: true, imageUrls: true },
       });
       const blobMap = new Map(existingBlobs.map((b) => [b.mondayItemId, b]));
 
-      // Split into: needs upload (no blob) and needs repair (has blob but might be broken)
+      // Detect asset ID changes: compare current proxy URLs with DB proxy URLs
+      // If Monday has new asset IDs, the blob is stale and needs re-upload
+      const toUpdate: MondayBumper[] = [];
+      for (const b of bumpersWithAssets) {
+        const existing = blobMap.get(b.mondayItemId);
+        if (existing?.blobImageUrl && existing.blobImageUrls.length > 0) {
+          // Compare asset IDs — if Monday has different ones, re-upload
+          const oldAssetIds = (existing.imageUrls || [])
+            .map((u: string) => u.match(/\/api\/images\/monday\/(\d+)/)?.[1])
+            .filter(Boolean)
+            .sort()
+            .join(",");
+          const newAssetIds = b.imageAssets
+            .map((a) => a.assetId)
+            .sort()
+            .join(",");
+          if (oldAssetIds && newAssetIds && oldAssetIds !== newAssetIds) {
+            toUpdate.push(b);
+          }
+        }
+      }
+
+      // Split into: needs upload (no blob), needs update (asset changed), needs repair (broken)
       const toUpload = bumpersWithAssets
         .filter((b) => {
           const existing = blobMap.get(b.mondayItemId);
           return !existing || !existing.blobImageUrl || existing.blobImageUrls.length === 0;
         })
-        .slice(0, 20); // max 20 new uploads per sync
+        .slice(0, 40); // max 40 new uploads per sync
 
       // Check for broken blobs — sample up to 10 per sync
       const toCheckRepair = bumpersWithAssets
@@ -181,6 +205,7 @@ export async function GET(request: Request) {
           const existing = blobMap.get(b.mondayItemId);
           return existing && existing.blobImageUrl && existing.blobImageUrls.length > 0;
         })
+        .filter((b) => !toUpdate.includes(b))
         .slice(0, 10);
 
       const toRepair: typeof toCheckRepair = [];
@@ -194,8 +219,8 @@ export async function GET(request: Request) {
         }
       }
 
-      // Upload new + repair broken
-      const allToProcess = [...toUpload, ...toRepair];
+      // Upload new + update changed + repair broken
+      const allToProcess = [...toUpload, ...toUpdate.slice(0, 10), ...toRepair];
       for (const bumper of allToProcess) {
         try {
           const blobUrls: string[] = [];
@@ -212,7 +237,9 @@ export async function GET(request: Request) {
               where: { mondayItemId: bumper.mondayItemId },
               data: { blobImageUrl: blobUrls[0], blobImageUrls: blobUrls },
             });
-            if (toRepair.includes(bumper)) {
+            if (toUpdate.includes(bumper)) {
+              blobUpdated++;
+            } else if (toRepair.includes(bumper)) {
               blobRepaired++;
             } else {
               blobUploaded++;
@@ -240,8 +267,8 @@ export async function GET(request: Request) {
       }
     }
 
-    await logger.info("monday_sync", `סנכרון הושלם: ${synced} פריטים, ${blobUploaded} הועלו ל-Blob, ${blobRepaired} תוקנו, ${removed} סומנו כאזל, ${errors} שגיאות, ${alertsSent} התראות מלאי`, {
-      total: bumpers.length, synced, blobUploaded, blobRepaired, removed, errors, alertsSent, backInStock: backInStock.length,
+    await logger.info("monday_sync", `סנכרון הושלם: ${synced} פריטים, ${blobUploaded} הועלו ל-Blob, ${blobUpdated} עודכנו, ${blobRepaired} תוקנו, ${removed} סומנו כאזל, ${errors} שגיאות, ${alertsSent} התראות מלאי`, {
+      total: bumpers.length, synced, blobUploaded, blobUpdated, blobRepaired, removed, errors, alertsSent, backInStock: backInStock.length,
     });
 
     return NextResponse.json({
@@ -249,6 +276,7 @@ export async function GET(request: Request) {
       total: bumpers.length,
       synced,
       blobUploaded,
+      blobUpdated,
       blobRepaired,
       removed,
       errors,
