@@ -113,7 +113,20 @@ export default function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="border-t border-white/10 mt-12 pt-8 flex flex-col items-center gap-3">
+        <div className="border-t border-white/10 mt-12 pt-8 flex flex-col items-center gap-4">
+          <div className="flex items-center gap-4 text-sm">
+            <Link href="/terms" className="text-white/60 hover:text-white transition-colors">
+              תנאי שימוש
+            </Link>
+            <span className="text-white/30">|</span>
+            <Link href="/privacy" className="text-white/60 hover:text-white transition-colors">
+              מדיניות פרטיות
+            </Link>
+            <span className="text-white/30">|</span>
+            <Link href="/accessibility" className="text-white/60 hover:text-white transition-colors">
+              הצהרת נגישות
+            </Link>
+          </div>
           <LogoutButton />
           <p className="text-white/50 text-sm">
             &copy; {new Date().getFullYear()} {SITE_NAME}. כל הזכויות שמורות.

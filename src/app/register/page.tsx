@@ -36,6 +36,7 @@ export default function RegisterPage() {
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   const updateField = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -44,6 +45,12 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    if (!termsAccepted) {
+      setError("יש לאשר את תנאי השימוש ומדיניות הפרטיות");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -249,6 +256,22 @@ export default function RegisterPage() {
                 />
               </>
             )}
+
+            <div className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                id="register-terms"
+                checked={termsAccepted}
+                onChange={(e) => setTermsAccepted(e.target.checked)}
+                className="w-4 h-4 mt-1 rounded border-border accent-primary shrink-0"
+              />
+              <label htmlFor="register-terms" className="text-sm text-text-secondary">
+                קראתי ואני מסכים/ה ל
+                <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline text-primary hover:text-primary/80 mx-1">תנאי שימוש</a>
+                ו
+                <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline text-primary hover:text-primary/80 mx-1">מדיניות פרטיות</a>
+              </label>
+            </div>
 
             {error && (
               <p className="text-sm text-danger text-center">{error}</p>

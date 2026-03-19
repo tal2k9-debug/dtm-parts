@@ -101,6 +101,23 @@ body {
 
 *:focus-visible { outline: 2px solid #2B7DE9; outline-offset: 2px; }
 
+/* Accessibility classes */
+.a11y-font-large { font-size: 118% !important; }
+.a11y-font-xl { font-size: 136% !important; }
+.a11y-high-contrast {
+  filter: contrast(1.4) !important;
+}
+.a11y-high-contrast * {
+  border-color: #000 !important;
+}
+.a11y-grayscale { filter: grayscale(1) !important; }
+.a11y-high-contrast.a11y-grayscale { filter: contrast(1.4) grayscale(1) !important; }
+.a11y-highlight-links a {
+  outline: 2px solid #ffcb00 !important;
+  outline-offset: 2px !important;
+  text-decoration: underline !important;
+}
+
 /* Hide Google Translate banner */
 .goog-te-banner-frame { display: none !important; }
 body { top: 0 !important; }

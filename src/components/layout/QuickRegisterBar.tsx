@@ -11,6 +11,7 @@ export default function QuickRegisterBar() {
   const [dismissed, setDismissed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [form, setForm] = useState({
     name: "",
     phone: "",
@@ -25,6 +26,12 @@ export default function QuickRegisterBar() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    if (!termsAccepted) {
+      setError("יש לאשר את תנאי השימוש ומדיניות הפרטיות");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -123,6 +130,22 @@ export default function QuickRegisterBar() {
             {loading ? "נרשם..." : "הרשמה"}
           </button>
         </form>
+
+        <div className="flex items-center gap-2 mt-2">
+          <input
+            type="checkbox"
+            id="quick-terms"
+            checked={termsAccepted}
+            onChange={(e) => setTermsAccepted(e.target.checked)}
+            className="w-4 h-4 rounded border-white/30 accent-accent shrink-0"
+          />
+          <label htmlFor="quick-terms" className="text-xs text-white/80">
+            קראתי ואני מסכים/ה ל
+            <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline text-primary-light hover:text-white mx-1">תנאי שימוש</a>
+            ו
+            <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline text-primary-light hover:text-white mx-1">מדיניות פרטיות</a>
+          </label>
+        </div>
 
         {error && (
           <p className="text-yellow-300 text-xs mt-2">{error}</p>

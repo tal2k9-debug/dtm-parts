@@ -4,6 +4,8 @@ import Providers from "./Providers";
 import FloatingChat from "@/components/chat/FloatingChat";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
+import CookieBanner from "@/components/CookieBanner";
+import AccessibilityWidget from "@/components/AccessibilityWidget";
 import { LocalBusinessJsonLd, WebSiteJsonLd } from "@/components/StructuredData";
 import "./globals.css";
 
@@ -70,6 +72,8 @@ export default function RootLayout({
             {children}
           </ErrorBoundary>
           <FloatingChat />
+          <CookieBanner />
+          <AccessibilityWidget />
         </Providers>
       </body>
     </html>
