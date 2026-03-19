@@ -130,7 +130,7 @@ export default function RegisterPage() {
                   <BuildingStorefrontIcon className="w-8 h-8 text-primary" />
                   <div>
                     <p className="font-bold text-text text-lg">לקוח עסקי — הרשמה</p>
-                    <p className="text-sm text-text-secondary">מוסך, חברת ליסינג, סוכנות רכב, פחחות וכו׳</p>
+                    <p className="text-sm text-text-secondary">מוסך, חברת ליסינג, סוכנות רכב, פחחות, סוחרי רכב וכו׳</p>
                   </div>
                 </div>
               </button>
