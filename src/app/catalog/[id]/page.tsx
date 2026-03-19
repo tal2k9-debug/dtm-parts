@@ -387,7 +387,7 @@ function BumperDetailPage({ id }: { id: string }) {
                 <Link href={`/quote?make=${encodeURIComponent(bumper.carMake)}&model=${encodeURIComponent(bumper.carModel)}&year=${encodeURIComponent(bumper.carYear)}&position=${bumper.position || ""}&catalogNumber=${encodeURIComponent(bumper.name)}`}>
                   <Button fullWidth size="lg" icon={<ShoppingBagIcon className="w-5 h-5" />}>שלח בקשת מחיר</Button>
                 </Link>
-                <a href={ADMIN_WHATSAPP_LINK} target="_blank" rel="noopener noreferrer">
+                <a href={`${ADMIN_WHATSAPP_LINK}?text=${encodeURIComponent(`היי, אני מעוניין בטמבון מספר ${bumper.name}\n${bumper.carMake} ${bumper.carModel} ${bumper.carYear} — ${bumper.position ? getPositionLabel(bumper.position) : ""}\nhttps://dtm-parts.com/catalog/${id}`)}`} target="_blank" rel="noopener noreferrer">
                   <Button fullWidth size="lg" variant="whatsapp" className="mt-3">שלח הודעה בוואטסאפ</Button>
                 </a>
                 <a href={`tel:${ADMIN_PHONE_INTL}`}>
