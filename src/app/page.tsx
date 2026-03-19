@@ -9,10 +9,10 @@ import CTASection from "@/components/home/CTASection";
 export default function HomePage() {
   return (
     <>
-      <QuickRegisterBar />
       <Header />
       <main>
         <HeroSection />
+        <QuickRegisterBar />
         <PopularBumpers />
         <FeaturesSection />
         <CTASection />

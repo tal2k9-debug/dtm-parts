@@ -27,7 +27,7 @@ export default function PopularBumpers() {
       .then((data) => {
         if (data.bumpers && Array.isArray(data.bumpers)) {
           setBumpers(data.bumpers);
-          setTotalCount(data.total || data.bumpers.length);
+          setTotalCount(data.pagination?.total || data.bumpers.length);
           setHasMore(data.bumpers.length >= PAGE_SIZE);
         } else if (Array.isArray(data)) {
           setBumpers(data);
@@ -48,7 +48,7 @@ export default function PopularBumpers() {
       if (data.bumpers && Array.isArray(data.bumpers)) {
         setBumpers((prev) => [...prev, ...data.bumpers]);
         setHasMore(data.bumpers.length >= PAGE_SIZE);
-        setTotalCount(data.total || 0);
+        setTotalCount(data.pagination?.total || 0);
         setPage((p) => p + 1);
       }
     } catch (err) {
