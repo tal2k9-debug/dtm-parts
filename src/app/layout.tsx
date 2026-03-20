@@ -7,6 +7,7 @@ import GoogleAnalytics from "@/components/GoogleAnalytics";
 import CookieBanner from "@/components/CookieBanner";
 import AccessibilityWidget from "@/components/AccessibilityWidget";
 import PageTracker from "@/components/PageTracker";
+import InstallApp from "@/components/InstallApp";
 import { LocalBusinessJsonLd, WebSiteJsonLd } from "@/components/StructuredData";
 import "./globals.css";
 
@@ -67,6 +68,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="he" dir="rtl" className={heebo.variable}>
+      <head>
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="DTM PARTS" />
+        <link rel="apple-touch-icon" href="/images/logo.jpeg" />
+        <meta name="theme-color" content="#1a1a2e" />
+      </head>
       <body className="font-sans antialiased">
         <GoogleAnalytics />
         <LocalBusinessJsonLd />
@@ -79,6 +87,7 @@ export default function RootLayout({
           <CookieBanner />
           <AccessibilityWidget />
           <PageTracker />
+          <InstallApp />
         </Providers>
       </body>
     </html>
