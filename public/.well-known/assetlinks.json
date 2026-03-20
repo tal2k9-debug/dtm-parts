@@ -1,10 +1,8 @@
-[
-  {
-    "relation": ["delegate_permission/common.handle_all_urls"],
-    "target": {
-      "namespace": "android_app",
-      "package_name": "co.il.dtmparts.twa",
-      "sha256_cert_fingerprints": ["__FINGERPRINT_PLACEHOLDER__"]
-    }
-  }
-]
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "il.co.dtmparts.twa",
+        "sha256_cert_fingerprints": ["49:80:AC:FC:C1:71:B4:36:3C:C8:36:F6:33:96:3F:B1:B5:FA:42:EE:DF:C4:20:EF:4B:A1:F8:AA:DB:4E:83:F4"]
+      }
+    }]
