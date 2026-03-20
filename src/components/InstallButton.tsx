@@ -9,11 +9,27 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
+declare global {
+  interface WindowEventMap {
+    beforeinstallprompt: BeforeInstallPromptEvent;
+  }
+}
+
+// Store deferred prompt globally so both components can access it
+let globalDeferredPrompt: BeforeInstallPromptEvent | null = null;
+
+export function getGlobalDeferredPrompt() {
+  return globalDeferredPrompt;
+}
+
+export function clearGlobalDeferredPrompt() {
+  globalDeferredPrompt = null;
+}
+
 export default function InstallButton() {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [ready, setReady] = useState(false);
+  const [hasDeferredPrompt, setHasDeferredPrompt] = useState(false);
 
   useEffect(() => {
     // Check if already installed as PWA
@@ -22,16 +38,15 @@ export default function InstallButton() {
       return;
     }
 
-    setReady(true);
-
-    // Listen for install prompt (Android/Desktop Chrome/Edge)
-    const handler = (e: Event) => {
+    // Listen for install prompt
+    const handler = (e: BeforeInstallPromptEvent) => {
       e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
+      globalDeferredPrompt = e;
+      setHasDeferredPrompt(true);
     };
     window.addEventListener("beforeinstallprompt", handler);
 
-    // Track scroll for color
+    // Track scroll
     const scrollHandler = () => setIsScrolled(window.scrollY > 20);
     window.addEventListener("scroll", scrollHandler);
     scrollHandler();
@@ -43,29 +58,30 @@ export default function InstallButton() {
   }, []);
 
   const handleClick = async () => {
-    if (deferredPrompt) {
-      // Native install — one click!
-      await deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
+    if (globalDeferredPrompt) {
+      await globalDeferredPrompt.prompt();
+      const { outcome } = await globalDeferredPrompt.userChoice;
       if (outcome === "accepted") setIsInstalled(true);
-      setDeferredPrompt(null);
+      globalDeferredPrompt = null;
+      setHasDeferredPrompt(false);
     } else {
-      // Scroll down to trigger the InstallApp banner
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      // Trigger the InstallApp modal
+      window.dispatchEvent(new CustomEvent("dtm-show-install"));
     }
   };
 
-  // Don't show if installed or not ready
-  if (isInstalled || !ready) return null;
+  if (isInstalled) return null;
 
   return (
     <button
       onClick={handleClick}
       className={cn(
-        "flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition-all",
-        isScrolled
-          ? "bg-accent text-white hover:bg-accent/90 shadow-md shadow-accent/30"
-          : "bg-white text-primary hover:bg-white/90 shadow-md"
+        "flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition-all animate-pulse hover:animate-none",
+        hasDeferredPrompt
+          ? "bg-green-500 text-white hover:bg-green-600 shadow-md shadow-green-500/30"
+          : isScrolled
+            ? "bg-accent text-white hover:bg-accent/90 shadow-md shadow-accent/30"
+            : "bg-white text-primary hover:bg-white/90 shadow-md"
       )}
     >
       <ArrowDownTrayIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
