@@ -76,6 +76,11 @@ export default function RootLayout({
         <meta name="theme-color" content="#1a1a2e" />
       </head>
       <body className="font-sans antialiased">
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js')}`,
+          }}
+        />
         <GoogleAnalytics />
         <LocalBusinessJsonLd />
         <WebSiteJsonLd />
