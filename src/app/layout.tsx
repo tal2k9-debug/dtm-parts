@@ -7,7 +7,7 @@ import GoogleAnalytics from "@/components/GoogleAnalytics";
 import CookieBanner from "@/components/CookieBanner";
 import AccessibilityWidget from "@/components/AccessibilityWidget";
 import PageTracker from "@/components/PageTracker";
-import InstallApp from "@/components/InstallApp";
+// import InstallApp from "@/components/InstallApp";
 import { LocalBusinessJsonLd, WebSiteJsonLd } from "@/components/StructuredData";
 import "./globals.css";
 
@@ -92,7 +92,7 @@ export default function RootLayout({
           <CookieBanner />
           <AccessibilityWidget />
           <PageTracker />
-          <InstallApp />
+          {/* <InstallApp /> */}
         </Providers>
       </body>
     </html>
