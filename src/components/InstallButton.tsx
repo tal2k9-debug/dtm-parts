@@ -49,14 +49,14 @@ export default function InstallButton() {
       const { outcome } = await deferredPrompt.userChoice;
       if (outcome === "accepted") setIsInstalled(true);
       setDeferredPrompt(null);
+    } else {
+      // Scroll down to trigger the InstallApp banner
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
   // Don't show if installed or not ready
   if (isInstalled || !ready) return null;
-
-  // Only show the button when native install is available
-  if (!deferredPrompt) return null;
 
   return (
     <button

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ArrowDownTrayIcon, XMarkIcon } from "@heroicons/react/24/outline";
 
 interface BeforeInstallPromptEvent extends Event {
@@ -13,6 +13,7 @@ export default function InstallApp() {
   const [showBanner, setShowBanner] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [showIOSGuide, setShowIOSGuide] = useState(false);
+  const [showChromeGuide, setShowChromeGuide] = useState(false);
 
   useEffect(() => {
     // Check if already installed
@@ -29,40 +30,48 @@ export default function InstallApp() {
     const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent);
     setIsIOS(isIOSDevice);
 
-    if (isIOSDevice) {
-      // iOS — show banner after 2 seconds
-      const timer = setTimeout(() => setShowBanner(true), 2000);
-      return () => clearTimeout(timer);
-    }
-
-    // Android/Desktop — listen for install prompt
+    // Listen for native install prompt (Android/Desktop Chrome/Edge)
     const handler = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
-      setTimeout(() => setShowBanner(true), 2000);
     };
     window.addEventListener("beforeinstallprompt", handler);
-    return () => window.removeEventListener("beforeinstallprompt", handler);
+
+    // Always show banner after 2 seconds — regardless of beforeinstallprompt
+    const timer = setTimeout(() => setShowBanner(true), 2000);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("beforeinstallprompt", handler);
+    };
   }, []);
 
-  const handleInstall = async () => {
+  const handleInstall = useCallback(async () => {
+    // iOS — show Safari guide
     if (isIOS) {
       setShowIOSGuide(true);
       return;
     }
 
-    if (!deferredPrompt) return;
-    await deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === "accepted") {
-      setShowBanner(false);
+    // Native install available — one click!
+    if (deferredPrompt) {
+      await deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === "accepted") {
+        setShowBanner(false);
+      }
+      setDeferredPrompt(null);
+      return;
     }
-    setDeferredPrompt(null);
-  };
+
+    // No native prompt (Firefox, first visit, etc.) — show Chrome guide
+    setShowChromeGuide(true);
+  }, [isIOS, deferredPrompt]);
 
   const handleDismiss = () => {
     setShowBanner(false);
     setShowIOSGuide(false);
+    setShowChromeGuide(false);
     localStorage.setItem("dtm_install_dismissed", Date.now().toString());
   };
 
@@ -70,7 +79,7 @@ export default function InstallApp() {
 
   return (
     <>
-      {/* Install Banner — prominent at bottom */}
+      {/* Install Banner — always visible at bottom */}
       <div className="fixed bottom-0 left-0 right-0 z-50 p-3 sm:p-0 sm:bottom-6 sm:left-auto sm:right-6 sm:w-80">
         <div className="bg-primary text-white rounded-2xl shadow-2xl p-4 relative border border-white/10">
           <button
@@ -84,7 +93,7 @@ export default function InstallApp() {
               <ArrowDownTrayIcon className="w-7 h-7 text-primary" />
             </div>
             <div className="flex-1">
-              <p className="font-bold">התקינו את DTM PARTS</p>
+              <p className="font-bold text-base">התקינו את DTM PARTS</p>
               <p className="text-xs text-white/70">גישה מהירה — כמו אפליקציה!</p>
             </div>
           </div>
@@ -92,7 +101,7 @@ export default function InstallApp() {
             onClick={handleInstall}
             className="w-full bg-white text-primary font-bold py-3 rounded-xl text-sm hover:bg-white/90 transition-colors shadow-lg"
           >
-            {isIOS ? "הראה לי איך" : "התקן עכשיו"}
+            {isIOS ? "הוספה למסך הבית" : "התקן עכשיו"}
           </button>
         </div>
       </div>
@@ -105,15 +114,44 @@ export default function InstallApp() {
             <div className="space-y-5">
               <div className="flex items-center gap-4">
                 <span className="bg-primary text-white w-9 h-9 rounded-full flex items-center justify-center font-bold shrink-0">1</span>
-                <p className="text-gray-700">לחצו על <strong>⬆️ שיתוף</strong> בתחתית Safari</p>
+                <p className="text-gray-700">לחצו על כפתור <strong>השיתוף</strong> בתחתית Safari</p>
               </div>
               <div className="flex items-center gap-4">
                 <span className="bg-primary text-white w-9 h-9 rounded-full flex items-center justify-center font-bold shrink-0">2</span>
-                <p className="text-gray-700">לחצו <strong>&quot;הוסף למסך הבית&quot;</strong></p>
+                <p className="text-gray-700">בחרו <strong>&quot;הוסף למסך הבית&quot;</strong></p>
               </div>
               <div className="flex items-center gap-4">
                 <span className="bg-primary text-white w-9 h-9 rounded-full flex items-center justify-center font-bold shrink-0">3</span>
                 <p className="text-gray-700">לחצו <strong>&quot;הוסף&quot;</strong> — זהו!</p>
+              </div>
+            </div>
+            <button
+              onClick={handleDismiss}
+              className="mt-6 w-full bg-primary text-white font-bold py-3 rounded-xl"
+            >
+              הבנתי!
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Chrome/Edge Guide Modal — when native prompt not available */}
+      {showChromeGuide && (
+        <div className="fixed inset-0 z-[60] bg-black/50 flex items-end justify-center" onClick={handleDismiss}>
+          <div className="bg-white rounded-t-3xl w-full max-w-lg p-6 pb-8" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-xl font-bold text-gray-900 mb-5 text-center">התקנת האפליקציה</h3>
+            <div className="space-y-5">
+              <div className="flex items-center gap-4">
+                <span className="bg-primary text-white w-9 h-9 rounded-full flex items-center justify-center font-bold shrink-0">1</span>
+                <p className="text-gray-700">לחצו על <strong>תפריט הדפדפן</strong> (⋮ שלוש נקודות)</p>
+              </div>
+              <div className="flex items-center gap-4">
+                <span className="bg-primary text-white w-9 h-9 rounded-full flex items-center justify-center font-bold shrink-0">2</span>
+                <p className="text-gray-700">בחרו <strong>&quot;התקן אפליקציה&quot;</strong> או <strong>&quot;הוסף למסך הבית&quot;</strong></p>
+              </div>
+              <div className="flex items-center gap-4">
+                <span className="bg-primary text-white w-9 h-9 rounded-full flex items-center justify-center font-bold shrink-0">3</span>
+                <p className="text-gray-700">אשרו — וזהו!</p>
               </div>
             </div>
             <button
