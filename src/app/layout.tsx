@@ -72,7 +72,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="DTM PARTS" />
-        <link rel="apple-touch-icon" href="/images/icon-512.jpg" />
+        <link rel="apple-touch-icon" href="/images/icon-192.png" />
         <meta name="theme-color" content="#1a1a2e" />
       </head>
       <body className="font-sans antialiased">
