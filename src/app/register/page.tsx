@@ -22,7 +22,7 @@ import {
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [customerType, setCustomerType] = useState<"" | "private" | "business">("");
+  const [customerType, setCustomerType] = useState<"" | "private" | "business" | "appraiser">("");
   const [form, setForm] = useState({
     username: "",
     password: "",
@@ -146,6 +146,19 @@ export default function RegisterPage() {
                   </div>
                 </div>
               </button>
+              <button
+                type="button"
+                onClick={() => { setCustomerType("appraiser"); updateField("businessType", "appraiser"); }}
+                className="w-full p-4 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-all duration-200 text-right"
+              >
+                <div className="flex items-center gap-3">
+                  <IdentificationIcon className="w-8 h-8 text-primary" />
+                  <div>
+                    <p className="font-bold text-text text-lg">שמאי — הרשמה</p>
+                    <p className="text-sm text-text-secondary">שמאי רכב / שמאי ביטוח</p>
+                  </div>
+                </div>
+              </button>
             </div>
           )}
 
@@ -162,7 +175,7 @@ export default function RegisterPage() {
 
             <div className="bg-primary/5 rounded-lg p-3 mb-4">
               <p className="text-sm font-medium text-primary text-center">
-                {customerType === "private" ? "👤 הרשמה כלקוח פרטי" : "🏢 הרשמה כלקוח עסקי"}
+                {customerType === "private" ? "👤 הרשמה כלקוח פרטי" : customerType === "appraiser" ? "📋 הרשמה כשמאי" : "🏢 הרשמה כלקוח עסקי"}
               </p>
             </div>
 
@@ -210,11 +223,14 @@ export default function RegisterPage() {
               icon={<EnvelopeIcon className="w-5 h-5" />}
             />
 
-            {customerType === "business" && (
+            {(customerType === "business" || customerType === "appraiser") && (
               <>
                 <div className="border-t border-border pt-4 mt-4">
-                  <p className="text-sm font-medium text-text mb-3">פרטי העסק</p>
+                  <p className="text-sm font-medium text-text mb-3">
+                    {customerType === "appraiser" ? "פרטי השמאי" : "פרטי העסק"}
+                  </p>
                 </div>
+                {customerType === "business" && (
                 <Select
                   label="סוג עסק *"
                   value={form.businessType}
@@ -232,13 +248,14 @@ export default function RegisterPage() {
                   ]}
                   required
                 />
+                )}
                 <Input
-                  label="שם העסק *"
+                  label={customerType === "appraiser" ? "שם המשרד / חברה" : "שם העסק *"}
                   value={form.businessName}
                   onChange={(e) => updateField("businessName", e.target.value)}
-                  placeholder="שם העסק"
+                  placeholder={customerType === "appraiser" ? "שם המשרד" : "שם העסק"}
                   icon={<BuildingStorefrontIcon className="w-5 h-5" />}
-                  required
+                  required={customerType !== "appraiser"}
                 />
                 <Input
                   label="כתובת העסק"
