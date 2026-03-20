@@ -17,6 +17,7 @@ import {
 } from "@heroicons/react/24/outline";
 import Button from "@/components/ui/Button";
 import LanguageSwitcher from "@/components/layout/LanguageSwitcher";
+import OnlineCounter from "@/components/OnlineCounter";
 import { useSession, signOut } from "next-auth/react";
 
 export default function Header() {
@@ -64,14 +65,17 @@ export default function Header() {
               >
                 {SITE_NAME}
               </h1>
-              <p
-                className={cn(
-                  "text-xs transition-colors duration-300",
-                  isScrolled ? "text-text-secondary" : "text-white/70"
-                )}
-              >
-                טמבונים / פגושים / מגנים
-              </p>
+              <div className="flex items-center gap-3">
+                <p
+                  className={cn(
+                    "text-xs transition-colors duration-300",
+                    isScrolled ? "text-text-secondary" : "text-white/70"
+                  )}
+                >
+                  טמבונים / פגושים / מגנים
+                </p>
+                <OnlineCounter />
+              </div>
             </div>
           </Link>
 

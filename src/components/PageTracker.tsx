@@ -1,0 +1,58 @@
+"use client";
+
+import { useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
+
+function getSessionId() {
+  if (typeof window === "undefined") return null;
+  let id = sessionStorage.getItem("dtm_session_id");
+  if (!id) {
+    id = Math.random().toString(36).substring(2) + Date.now().toString(36);
+    sessionStorage.setItem("dtm_session_id", id);
+  }
+  return id;
+}
+
+export default function PageTracker() {
+  const pathname = usePathname();
+  const lastPath = useRef("");
+
+  // Track page views
+  useEffect(() => {
+    if (pathname === lastPath.current) return;
+    lastPath.current = pathname;
+
+    // Don't track admin pages
+    if (pathname.startsWith("/admin")) return;
+
+    const sessionId = getSessionId();
+    fetch("/api/tracking", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "page_view",
+        path: pathname,
+        sessionId,
+        referrer: document.referrer || null,
+      }),
+    }).catch(() => {});
+  }, [pathname]);
+
+  // Heartbeat — ping every 60 seconds to track online users
+  useEffect(() => {
+    const sessionId = getSessionId();
+    const ping = () => {
+      fetch("/api/online", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId }),
+      }).catch(() => {});
+    };
+
+    ping(); // initial ping
+    const interval = setInterval(ping, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return null;
+}

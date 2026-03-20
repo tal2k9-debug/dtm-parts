@@ -6,6 +6,7 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import CookieBanner from "@/components/CookieBanner";
 import AccessibilityWidget from "@/components/AccessibilityWidget";
+import PageTracker from "@/components/PageTracker";
 import { LocalBusinessJsonLd, WebSiteJsonLd } from "@/components/StructuredData";
 import "./globals.css";
 
@@ -77,6 +78,7 @@ export default function RootLayout({
           <FloatingChat />
           <CookieBanner />
           <AccessibilityWidget />
+          <PageTracker />
         </Providers>
       </body>
     </html>

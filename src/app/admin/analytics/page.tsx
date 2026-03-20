@@ -11,6 +11,8 @@ import {
   ClockIcon,
   ChartBarIcon,
   StarIcon,
+  GlobeAltIcon,
+  SignalIcon,
 } from "@heroicons/react/24/outline";
 
 interface Analytics {
@@ -25,6 +27,12 @@ interface Analytics {
     viewsToday: number;
     viewsThisWeek: number;
     viewsThisMonth: number;
+    pageViewsToday: number;
+    pageViewsThisWeek: number;
+    pageViewsThisMonth: number;
+    totalPageViews: number;
+    uniqueVisitorsToday: number;
+    onlineNow: number;
   };
   requestsByStatus: {
     pending: number;
@@ -173,11 +181,35 @@ export default function AnalyticsPage() {
         </button>
       </div>
 
+      {/* Online + Visitors Row */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <StatCard
+          icon={SignalIcon}
+          label="אונליין עכשיו"
+          value={overview.onlineNow}
+          color="bg-emerald-50 text-emerald-600"
+        />
+        <StatCard
+          icon={GlobeAltIcon}
+          label="כניסות לאתר היום"
+          value={overview.pageViewsToday}
+          sub={`מבקרים ייחודיים: ${overview.uniqueVisitorsToday}`}
+          color="bg-indigo-50 text-indigo-600"
+        />
+        <StatCard
+          icon={GlobeAltIcon}
+          label="סה״כ כניסות"
+          value={overview.totalPageViews}
+          sub={`השבוע: ${overview.pageViewsThisWeek} | החודש: ${overview.pageViewsThisMonth}`}
+          color="bg-indigo-50 text-indigo-600"
+        />
+      </div>
+
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           icon={EyeIcon}
-          label="צפיות היום"
+          label="צפיות טמבונים היום"
           value={overview.viewsToday}
           sub={`השבוע: ${overview.viewsThisWeek} | החודש: ${overview.viewsThisMonth}`}
           color="bg-blue-50 text-blue-600"

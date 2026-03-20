@@ -10,7 +10,14 @@ export async function POST(request: Request) {
     const { type, bumperId, path, sessionId, referrer } = body;
 
     const session = await getServerSession(authOptions);
-    const userId = (session?.user as Record<string, unknown>)?.id as string | undefined;
+    const user = session?.user as Record<string, unknown> | undefined;
+    const userId = user?.id as string | undefined;
+    const role = user?.role as string | undefined;
+
+    // Don't track admin visits
+    if (role === "ADMIN") {
+      return NextResponse.json({ success: true });
+    }
 
     if (type === "bumper_view" && bumperId) {
       await prisma.bumperView.create({

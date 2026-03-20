@@ -16,6 +16,13 @@ export async function GET() {
     const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
+    // Get admin user IDs to exclude from analytics
+    const adminUsers = await prisma.user.findMany({
+      where: { role: "ADMIN" },
+      select: { id: true },
+    });
+    const adminIds = adminUsers.map((u) => u.id);
+
     // Run all queries in parallel
     const [
       // Quote request stats
@@ -29,10 +36,19 @@ export async function GET() {
       totalCustomers,
       customersThisMonth,
 
-      // Bumper view stats
+      // Bumper view stats (excluding admin)
       viewsToday,
       viewsThisWeek,
       viewsThisMonth,
+
+      // Page view stats (excluding admin)
+      pageViewsToday,
+      pageViewsThisWeek,
+      pageViewsThisMonth,
+      totalPageViews,
+
+      // Unique visitors today
+      uniqueVisitorsToday,
 
       // Top viewed bumpers (last 30 days)
       topViewedRaw,
@@ -64,9 +80,21 @@ export async function GET() {
       prisma.user.count({ where: { role: { not: "ADMIN" } } }),
       prisma.user.count({ where: { role: { not: "ADMIN" }, createdAt: { gte: monthAgo } } }),
 
-      prisma.bumperView.count({ where: { createdAt: { gte: todayStart } } }),
-      prisma.bumperView.count({ where: { createdAt: { gte: weekAgo } } }),
-      prisma.bumperView.count({ where: { createdAt: { gte: monthAgo } } }),
+      prisma.bumperView.count({ where: { createdAt: { gte: todayStart }, OR: [{ userId: null }, { userId: { notIn: adminIds } }] } }),
+      prisma.bumperView.count({ where: { createdAt: { gte: weekAgo }, OR: [{ userId: null }, { userId: { notIn: adminIds } }] } }),
+      prisma.bumperView.count({ where: { createdAt: { gte: monthAgo }, OR: [{ userId: null }, { userId: { notIn: adminIds } }] } }),
+
+      // Page views (excluding admin)
+      prisma.pageView.count({ where: { createdAt: { gte: todayStart }, OR: [{ userId: null }, { userId: { notIn: adminIds } }] } }),
+      prisma.pageView.count({ where: { createdAt: { gte: weekAgo }, OR: [{ userId: null }, { userId: { notIn: adminIds } }] } }),
+      prisma.pageView.count({ where: { createdAt: { gte: monthAgo }, OR: [{ userId: null }, { userId: { notIn: adminIds } }] } }),
+      prisma.pageView.count({ where: { OR: [{ userId: null }, { userId: { notIn: adminIds } }] } }),
+
+      // Unique visitors today (by sessionId)
+      prisma.pageView.groupBy({
+        by: ["sessionId"],
+        where: { createdAt: { gte: todayStart }, sessionId: { not: null } },
+      }).then((r) => r.length),
 
       prisma.bumperView.groupBy({
         by: ["bumperId"],
@@ -162,6 +190,15 @@ export async function GET() {
       requestsByStatus.map((s) => [s.status, s._count.id])
     );
 
+    // Fetch online count
+    let onlineCount = 0;
+    try {
+      const baseUrl = process.env.NEXTAUTH_URL || process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000";
+      const onlineRes = await fetch(`${baseUrl}/api/online`);
+      const onlineData = await onlineRes.json();
+      onlineCount = onlineData.online || 0;
+    } catch { /* ignore */ }
+
     return NextResponse.json({
       overview: {
         totalRequests,
@@ -174,6 +211,12 @@ export async function GET() {
         viewsToday,
         viewsThisWeek,
         viewsThisMonth,
+        pageViewsToday,
+        pageViewsThisWeek,
+        pageViewsThisMonth,
+        totalPageViews,
+        uniqueVisitorsToday,
+        onlineNow: onlineCount,
       },
       requestsByStatus: {
         pending: statusMap["PENDING"] || 0,
