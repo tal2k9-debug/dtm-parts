@@ -68,15 +68,14 @@ export default function InstallButton() {
       <button
         onClick={handleClick}
         className={cn(
-          "flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all",
+          "hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all",
           isScrolled
             ? "bg-accent text-white hover:bg-accent/90 shadow-md shadow-accent/30"
             : "bg-white text-primary hover:bg-white/90 shadow-md"
         )}
       >
         <ArrowDownTrayIcon className="w-4 h-4" />
-        <span className="hidden sm:inline">הורדת אפליקציה</span>
-        <span className="sm:hidden">אפליקציה</span>
+        הורדת אפליקציה
       </button>
 
       {/* Install Guide Modal */}
