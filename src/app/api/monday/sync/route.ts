@@ -255,7 +255,7 @@ export async function GET(request: Request) {
       }
     }
 
-    // Mark bumpers removed from Monday as "אזל"
+    // Delete bumpers removed from Monday
     // Safety: only if we got a real response (>50 items)
     const mondayIds = new Set(bumpers.map((b) => b.mondayItemId));
     let removed = 0;
@@ -263,9 +263,8 @@ export async function GET(request: Request) {
       for (const existing of existingBumpers) {
         if (!mondayIds.has(existing.mondayItemId)) {
           try {
-            await prisma.bumperCache.update({
+            await prisma.bumperCache.delete({
               where: { mondayItemId: existing.mondayItemId },
-              data: { status: "לא" },
             });
             removed++;
           } catch { /* non-blocking */ }
