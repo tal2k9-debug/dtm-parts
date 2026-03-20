@@ -23,19 +23,19 @@ const nextConfig: NextConfig = {
         destination: "https://dtmparts.co.il/:path*",
         permanent: true,
       },
-      // TODO: Enable these after dtmparts.co.il DNS is fully propagated
-      // {
-      //   source: "/:path*",
-      //   has: [{ type: "host", value: "dtm-parts.com" }],
-      //   destination: "https://dtmparts.co.il/:path*",
-      //   permanent: true,
-      // },
-      // {
-      //   source: "/:path*",
-      //   has: [{ type: "host", value: "www.dtm-parts.com" }],
-      //   destination: "https://dtmparts.co.il/:path*",
-      //   permanent: true,
-      // },
+      // Redirect dtm-parts.com to dtmparts.co.il
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "dtm-parts.com" }],
+        destination: "https://dtmparts.co.il/:path*",
+        permanent: true,
+      },
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.dtm-parts.com" }],
+        destination: "https://dtmparts.co.il/:path*",
+        permanent: true,
+      },
     ];
   },
 };
