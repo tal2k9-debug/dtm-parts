@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "dtm-dev",
-      "runtimeExecutable": "C:/Program Files/nodejs/npx.cmd",
-      "runtimeArgs": ["next", "dev", "--port", "3000"],
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
       "port": 3000
     }
   ]

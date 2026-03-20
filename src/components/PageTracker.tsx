@@ -38,21 +38,39 @@ export default function PageTracker() {
     }).catch(() => {});
   }, [pathname]);
 
-  // Heartbeat — ping every 60 seconds to track online users
+  // Heartbeat — ping every 60 seconds with current page info
   useEffect(() => {
     const sessionId = getSessionId();
+
     const ping = () => {
+      // Don't send heartbeat for admin pages
+      if (window.location.pathname.startsWith("/admin")) return;
+
+      // Check if viewing a bumper page
+      const bumperMatch = window.location.pathname.match(/^\/catalog\/(\d+)$/);
+      const bumperId = bumperMatch ? bumperMatch[1] : null;
+
+      // Try to get bumper name from page title
+      const bumperName = bumperId
+        ? document.querySelector("h1")?.textContent || null
+        : null;
+
       fetch("/api/online", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId }),
+        body: JSON.stringify({
+          sessionId,
+          page: window.location.pathname,
+          bumperId,
+          bumperName,
+        }),
       }).catch(() => {});
     };
 
-    ping(); // initial ping
+    ping();
     const interval = setInterval(ping, 60000);
     return () => clearInterval(interval);
-  }, []);
+  }, [pathname]);
 
   return null;
 }

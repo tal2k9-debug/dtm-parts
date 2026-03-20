@@ -10,7 +10,7 @@ import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import BumperCard from "@/components/catalog/BumperCard";
 import { getPositionLabel, formatPrice } from "@/lib/utils";
-import { ShoppingBagIcon, PhoneIcon, TruckIcon, ArrowRightIcon, HeartIcon } from "@heroicons/react/24/outline";
+import { ShoppingBagIcon, PhoneIcon, TruckIcon, ArrowRightIcon, HeartIcon, EyeIcon } from "@heroicons/react/24/outline";
 import { HeartIcon as HeartSolid } from "@heroicons/react/24/solid";
 import { ADMIN_WHATSAPP_LINK, ADMIN_PHONE_INTL } from "@/lib/constants";
 import { getManufacturerBySlug } from "@/lib/manufacturers";
@@ -202,6 +202,7 @@ function BumperDetailPage({ id }: { id: string }) {
   const [selectedImage, setSelectedImage] = useState(0);
   const [isFavorited, setIsFavorited] = useState(false);
   const [favLoading, setFavLoading] = useState(false);
+  const [viewers, setViewers] = useState(0);
 
   useEffect(() => {
     fetch(`/api/bumpers/${id}`)
@@ -222,6 +223,20 @@ function BumperDetailPage({ id }: { id: string }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ type: "bumper_view", bumperId: bumper.mondayItemId }),
     }).catch(() => {});
+  }, [bumper]);
+
+  // Fetch viewers count
+  useEffect(() => {
+    if (!bumper) return;
+    const fetchViewers = () => {
+      fetch(`/api/online?bumper=${bumper.mondayItemId}`)
+        .then((r) => r.json())
+        .then((d) => setViewers(d.viewers || 0))
+        .catch(() => {});
+    };
+    fetchViewers();
+    const interval = setInterval(fetchViewers, 30000);
+    return () => clearInterval(interval);
   }, [bumper]);
 
   // Check if bumper is favorited
@@ -356,7 +371,15 @@ function BumperDetailPage({ id }: { id: string }) {
             <div className="space-y-6">
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <Badge variant={statusValue === "במלאי" ? "success" : statusValue === "אזל" ? "danger" : "warning"} dot>{bumper.status}</Badge>
+                  <div className="flex items-center gap-3">
+                    <Badge variant={statusValue === "במלאי" ? "success" : statusValue === "אזל" ? "danger" : "warning"} dot>{bumper.status}</Badge>
+                    {viewers > 0 && (
+                      <span className="flex items-center gap-1 text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                        <EyeIcon className="w-3.5 h-3.5" />
+                        {viewers} צופים עכשיו
+                      </span>
+                    )}
+                  </div>
                   {isLoggedIn && (
                     <button
                       onClick={toggleFavorite}

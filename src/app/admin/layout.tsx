@@ -17,6 +17,7 @@ import {
   ChatBubbleLeftRightIcon,
   Cog6ToothIcon,
   ShieldCheckIcon,
+  SignalIcon,
   ArrowRightStartOnRectangleIcon,
   Bars3Icon,
   XMarkIcon,
@@ -30,6 +31,7 @@ const navIcons: Record<string, React.ReactNode> = {
   "/admin/inventory": <CubeIcon className="w-5 h-5" />,
   "/admin/chat": <ChatBubbleLeftRightIcon className="w-5 h-5" />,
   "/admin/analytics": <PresentationChartLineIcon className="w-5 h-5" />,
+  "/admin/online": <SignalIcon className="w-5 h-5" />,
   "/admin/monitoring": <ShieldCheckIcon className="w-5 h-5" />,
   "/admin/settings": <Cog6ToothIcon className="w-5 h-5" />,
 };
