@@ -150,18 +150,53 @@ export async function GET(request: NextRequest) {
 
     // No year filter — standard DB pagination
     // Order: bumpers with blob images first, then by lastSynced
-    const [rawBumpers, total] = await Promise.all([
-      prisma.bumperCache.findMany({
-        where,
-        skip: (page - 1) * limit,
-        take: limit,
-        orderBy: [
-          { blobImageUrl: { sort: "desc", nulls: "last" } },
-          { lastSynced: "desc" },
-        ],
-      }),
+    // Use two-query approach because Prisma nulls ordering doesn't handle empty strings
+    const withImagesWhere: Prisma.BumperCacheWhereInput = {
+      AND: [where, { blobImageUrl: { not: null } }],
+    };
+    const noImagesWhere: Prisma.BumperCacheWhereInput = {
+      AND: [where, { blobImageUrl: null }],
+    };
+
+    const [total, withImagesCount] = await Promise.all([
       prisma.bumperCache.count({ where }),
+      prisma.bumperCache.count({ where: withImagesWhere }),
     ]);
+
+    const skip = (page - 1) * limit;
+    let rawBumpers;
+
+    if (skip < withImagesCount) {
+      // This page starts within items that have images
+      const withImages = await prisma.bumperCache.findMany({
+        where: withImagesWhere,
+        skip,
+        take: limit,
+        orderBy: { lastSynced: "desc" },
+      });
+
+      if (withImages.length < limit) {
+        // Fill remaining slots with items without images
+        const remaining = limit - withImages.length;
+        const noImages = await prisma.bumperCache.findMany({
+          where: noImagesWhere,
+          take: remaining,
+          orderBy: { lastSynced: "desc" },
+        });
+        rawBumpers = [...withImages, ...noImages];
+      } else {
+        rawBumpers = withImages;
+      }
+    } else {
+      // Past all items with images — fetch from no-image set
+      const noImagesSkip = skip - withImagesCount;
+      rawBumpers = await prisma.bumperCache.findMany({
+        where: noImagesWhere,
+        skip: noImagesSkip,
+        take: limit,
+        orderBy: { lastSynced: "desc" },
+      });
+    }
 
     // Transform protected Monday URLs to proxy URLs and normalize status
     const bumpers = rawBumpers.map((b) => ({

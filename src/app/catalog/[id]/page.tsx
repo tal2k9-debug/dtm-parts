@@ -10,7 +10,7 @@ import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import BumperCard from "@/components/catalog/BumperCard";
 import { getPositionLabel, formatPrice } from "@/lib/utils";
-import { ShoppingBagIcon, PhoneIcon, TruckIcon, ArrowRightIcon, HeartIcon, EyeIcon } from "@heroicons/react/24/outline";
+import { ShoppingBagIcon, PhoneIcon, TruckIcon, ArrowRightIcon, HeartIcon, EyeIcon, ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import { HeartIcon as HeartSolid } from "@heroicons/react/24/solid";
 import { ADMIN_WHATSAPP_LINK, ADMIN_PHONE_INTL } from "@/lib/constants";
 import { getManufacturerBySlug } from "@/lib/manufacturers";
@@ -325,8 +325,8 @@ function BumperDetailPage({ id }: { id: string }) {
           </Link>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div>
-              {/* Main image */}
-              <div className="relative bg-gray-100 rounded-2xl aspect-square flex items-center justify-center overflow-hidden mb-3">
+              {/* Main image with carousel arrows */}
+              <div className="relative bg-gray-100 rounded-2xl aspect-square flex items-center justify-center overflow-hidden mb-3 group">
                 {(bumper.imageUrls?.length > 0 || bumper.imageUrl) ? (
                   <img
                     src={bumper.imageUrls?.[selectedImage] || bumper.imageUrl || ""}
@@ -339,6 +339,29 @@ function BumperDetailPage({ id }: { id: string }) {
                     alt="DTM Parts"
                     className="w-full h-full object-cover"
                   />
+                )}
+                {/* Navigation arrows */}
+                {bumper.imageUrls && bumper.imageUrls.length > 1 && (
+                  <>
+                    <button
+                      onClick={() => setSelectedImage((prev) => prev > 0 ? prev - 1 : bumper.imageUrls!.length - 1)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 backdrop-blur-sm rounded-full shadow-lg flex items-center justify-center hover:bg-white transition-all opacity-0 group-hover:opacity-100 sm:opacity-70"
+                      aria-label="תמונה קודמת"
+                    >
+                      <ChevronRightIcon className="w-6 h-6 text-gray-700" />
+                    </button>
+                    <button
+                      onClick={() => setSelectedImage((prev) => prev < bumper.imageUrls!.length - 1 ? prev + 1 : 0)}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 backdrop-blur-sm rounded-full shadow-lg flex items-center justify-center hover:bg-white transition-all opacity-0 group-hover:opacity-100 sm:opacity-70"
+                      aria-label="תמונה הבאה"
+                    >
+                      <ChevronLeftIcon className="w-6 h-6 text-gray-700" />
+                    </button>
+                    {/* Image counter */}
+                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-sm text-white text-xs px-3 py-1 rounded-full">
+                      {selectedImage + 1} / {bumper.imageUrls.length}
+                    </div>
+                  </>
                 )}
                 {isLoggedIn && (
                   <button
