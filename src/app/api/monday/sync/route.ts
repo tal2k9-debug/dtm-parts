@@ -71,7 +71,7 @@ export async function GET(request: Request) {
             carModel: bumper.carModel,
             carYear: bumper.carYear,
             position: bumper.position,
-            price: null,
+            // price: NOT updated here — preserved from DB (set separately)
             status: bumper.status,
             imageUrl: bumper.imageUrls[0] || null,
             imageUrls: bumper.imageUrls,
@@ -255,16 +255,17 @@ export async function GET(request: Request) {
       }
     }
 
-    // Delete bumpers removed from Monday
-    // Safety: only if we got a real response (>50 items)
+    // Mark bumpers removed from Monday as "אזל" (don't delete — preserve data!)
+    // Safety: only if we got a substantial response (>200 items = at least 20% of inventory)
     const mondayIds = new Set(bumpers.map((b) => b.mondayItemId));
     let removed = 0;
-    if (bumpers.length > 50) {
+    if (bumpers.length > 200) {
       for (const existing of existingBumpers) {
-        if (!mondayIds.has(existing.mondayItemId)) {
+        if (!mondayIds.has(existing.mondayItemId) && existing.status !== "אזל" && existing.status !== "לא") {
           try {
-            await prisma.bumperCache.delete({
+            await prisma.bumperCache.update({
               where: { mondayItemId: existing.mondayItemId },
+              data: { status: "אזל" },
             });
             removed++;
           } catch { /* non-blocking */ }
