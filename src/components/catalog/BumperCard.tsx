@@ -76,16 +76,8 @@ export default function BumperCard({ bumper, isLoggedIn, isFavorited, onToggleFa
                 alt={bumper.name}
                 className="absolute inset-0 w-full h-full object-contain bg-gray-50 group-hover:scale-105 transition-transform duration-500"
                 loading="lazy"
-                onError={(e) => {
-                  // If blob URL failed, try Monday proxy as fallback
-                  const target = e.target as HTMLImageElement;
-                  const mondayProxy = bumper.imageUrls?.find((u: string) => u.startsWith("/api/images/monday/"));
-                  if (mondayProxy && !target.dataset.retried) {
-                    target.dataset.retried = "1";
-                    target.src = mondayProxy;
-                  } else {
-                    setImgError(true);
-                  }
+                onError={() => {
+                  setImgError(true);
                 }}
               />
             ) : (

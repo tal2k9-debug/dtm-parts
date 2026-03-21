@@ -4,25 +4,15 @@ import { Prisma, Position } from "@prisma/client";
 import { doesYearMatch } from "@/lib/yearParser";
 import { normalizeHebrew } from "@/lib/hebrewNormalize";
 
-// Transform protected Monday.com URLs to proxy URLs (fallback when no blob)
-function transformImageUrl(url: string | null): string | null {
-  if (!url) return null;
-  if (url.startsWith("/api/images/monday/")) return url;
-  const match = url.match(/monday\.com\/protected_static\/\d+\/resources\/(\d+)\//);
-  if (match) {
-    return `/api/images/monday/${match[1]}`;
-  }
-  return url;
+// Use ONLY Blob CDN URLs — never fall back to Monday proxy
+// Monday proxy burns daily API limit and causes ALL images to break
+function getBestImageUrl(blobUrl: string | null, _mondayUrl: string | null): string | null {
+  return blobUrl || null;
 }
 
-// Prefer blob URL, fallback to Monday proxy
-function getBestImageUrl(blobUrl: string | null, mondayUrl: string | null): string | null {
-  return blobUrl || transformImageUrl(mondayUrl);
-}
-
-function getBestImageUrls(blobUrls: string[], mondayUrls: string[]): string[] {
+function getBestImageUrls(blobUrls: string[], _mondayUrls: string[]): string[] {
   if (blobUrls.length > 0) return blobUrls;
-  return mondayUrls.map((url) => transformImageUrl(url) || url);
+  return [];
 }
 
 // Normalize status values from Monday ("כן"/"לא") to display values
