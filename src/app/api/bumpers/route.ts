@@ -120,6 +120,13 @@ export async function GET(request: NextRequest) {
         doesYearMatch(b.carYear, filterByYear)
       );
 
+      // Sort: bumpers with blob images first
+      yearFiltered.sort((a, b) => {
+        const aHasImg = a.blobImageUrl ? 0 : 1;
+        const bHasImg = b.blobImageUrl ? 0 : 1;
+        return aHasImg - bHasImg;
+      });
+
       const total = yearFiltered.length;
       const paged = yearFiltered.slice((page - 1) * limit, page * limit);
 
@@ -142,12 +149,16 @@ export async function GET(request: NextRequest) {
     }
 
     // No year filter — standard DB pagination
+    // Order: bumpers with blob images first, then by lastSynced
     const [rawBumpers, total] = await Promise.all([
       prisma.bumperCache.findMany({
         where,
         skip: (page - 1) * limit,
         take: limit,
-        orderBy: { lastSynced: "desc" },
+        orderBy: [
+          { blobImageUrl: { sort: "desc", nulls: "last" } },
+          { lastSynced: "desc" },
+        ],
       }),
       prisma.bumperCache.count({ where }),
     ]);

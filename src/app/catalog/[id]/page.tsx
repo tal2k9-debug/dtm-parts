@@ -334,7 +334,11 @@ function BumperDetailPage({ id }: { id: string }) {
                     className="w-full h-full object-contain"
                   />
                 ) : (
-                  <TruckIcon className="w-24 h-24 text-gray-300" />
+                  <img
+                    src="/images/bumper-placeholder.svg"
+                    alt="DTM Parts"
+                    className="w-full h-full object-cover"
+                  />
                 )}
                 {isLoggedIn && (
                   <button
