@@ -206,7 +206,7 @@ export async function GET(request: Request) {
           const bInStock = b.status === "במלאי" || b.status === "כן" ? 0 : 1;
           return aInStock - bInStock;
         })
-        .slice(0, 80); // max 80 new uploads per sync
+        .slice(0, 200); // max 200 new uploads per sync
 
       // Check for broken blobs — sample up to 10 per sync
       const toCheckRepair = bumpersWithAssets

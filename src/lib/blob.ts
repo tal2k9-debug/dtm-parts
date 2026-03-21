@@ -19,6 +19,7 @@ export async function uploadImageToBlob(
   const { url } = await put(`bumpers/${assetId}.webp`, compressed, {
     access: "public",
     addRandomSuffix: false,
+    allowOverwrite: true,
     contentType: "image/webp",
   });
 
