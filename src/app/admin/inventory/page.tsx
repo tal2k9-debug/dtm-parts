@@ -133,7 +133,7 @@ export default function AdminInventoryPage() {
     if (bumper.imageUrls && bumper.imageUrls[index]) {
       return bumper.imageUrls[index];
     }
-    return "/images/no-image.svg";
+    return "/images/bumper-placeholder.svg";
   };
 
   const getImageCount = (bumper: Bumper): number => {
@@ -240,7 +240,7 @@ export default function AdminInventoryPage() {
                       <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 relative">
                         {(b.blobImageUrl || b.imageUrl) ? (
                           <Image
-                            src={b.blobImageUrl || b.imageUrl || "/images/no-image.svg"}
+                            src={b.blobImageUrl || b.imageUrl || "/images/bumper-placeholder.svg"}
                             alt={b.name}
                             fill
                             className="object-cover"

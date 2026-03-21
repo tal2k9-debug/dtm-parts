@@ -95,7 +95,7 @@ export async function GET(
         return new Response(null, {
           status: 307,
           headers: {
-            Location: "/images/no-image.svg",
+            Location: "/images/bumper-placeholder.svg",
             "Cache-Control": "public, max-age=300", // retry in 5 min
           },
         });
