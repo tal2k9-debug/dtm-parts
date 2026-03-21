@@ -3,6 +3,9 @@ import { fetchBumpersFromMonday } from "@/lib/monday";
 import type { MondayBumper } from "@/lib/monday";
 import { prisma } from "@/lib/prisma";
 import { withRetry, mondayCircuit } from "@/lib/resilience";
+
+// Allow up to 120 seconds for full sync (2930+ items from Monday)
+export const maxDuration = 120;
 import { logger } from "@/lib/logger";
 import { notifyAdmin, sendWhatsApp, formatStockAlertMessage } from "@/lib/whatsapp";
 import { uploadImageToBlob, downloadImage, isBlobImageValid } from "@/lib/blob";

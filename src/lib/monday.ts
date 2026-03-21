@@ -152,7 +152,7 @@ export async function fetchBumpersFromMonday(): Promise<MondayBumper[]> {
   // First request - include assets for image public URLs
   const firstQuery = `{
     boards(ids: [${BUMPERS_BOARD_ID}]) {
-      items_page(limit: 100) {
+      items_page(limit: 500) {
         cursor
         items {
           id
@@ -191,7 +191,7 @@ export async function fetchBumpersFromMonday(): Promise<MondayBumper[]> {
   // Paginate
   while (cursor) {
     const nextQuery = `{
-      next_items_page(limit: 100, cursor: "${cursor}") {
+      next_items_page(limit: 500, cursor: "${cursor}") {
         cursor
         items {
           id
