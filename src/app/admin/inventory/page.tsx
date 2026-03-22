@@ -88,7 +88,7 @@ export default function AdminInventoryPage() {
       const res = await fetch(`/api/admin/bumpers/${bumper.id}/reorder-images`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ primaryIndex: imageIndex }),
+        body: JSON.stringify({ primaryIndex: imageIndex, imageUrl: getImageUrl(bumper, imageIndex) }),
       });
       if (res.ok) {
         const data = await res.json();

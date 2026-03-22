@@ -16,11 +16,7 @@ export async function PUT(
 
   const { id } = await params;
   const body = await request.json();
-  const { primaryIndex } = body;
-
-  if (typeof primaryIndex !== "number") {
-    return NextResponse.json({ error: "חסר primaryIndex" }, { status: 400 });
-  }
+  const { primaryIndex, imageUrl } = body;
 
   const bumper = await prisma.bumperCache.findUnique({ where: { id } });
   if (!bumper) {
@@ -35,8 +31,21 @@ export async function PUT(
     return [item, ...rest];
   };
 
-  const newImageUrls = reorder(bumper.imageUrls, primaryIndex);
-  const newBlobImageUrls = reorder(bumper.blobImageUrls, primaryIndex);
+  // Find the actual index in the DB by URL (more reliable than client index)
+  let actualIndex = primaryIndex;
+  if (imageUrl) {
+    // Try to find in blobImageUrls first, then imageUrls
+    const blobIdx = bumper.blobImageUrls.findIndex((u) => u === imageUrl);
+    const imgIdx = bumper.imageUrls.findIndex((u) => u === imageUrl);
+    actualIndex = blobIdx >= 0 ? blobIdx : imgIdx >= 0 ? imgIdx : primaryIndex;
+  }
+
+  if (typeof actualIndex !== "number" || actualIndex < 0) {
+    return NextResponse.json({ error: "חסר primaryIndex" }, { status: 400 });
+  }
+
+  const newImageUrls = reorder(bumper.imageUrls, actualIndex);
+  const newBlobImageUrls = reorder(bumper.blobImageUrls, actualIndex);
 
   // Also update imageUrl and blobImageUrl to match new first item
   const updated = await prisma.bumperCache.update({
