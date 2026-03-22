@@ -143,39 +143,42 @@ export default function VehicleSelector() {
 
   return (
     <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/50 overflow-hidden">
-      {/* Header with tabs */}
-      <div className="bg-primary">
-        <div className="flex">
-          <button
-            onClick={() => { setActiveTab("manual"); setShowConfirm(false); }}
-            className={`flex-1 px-6 py-4 text-sm font-bold transition-all ${
-              activeTab === "manual"
-                ? "text-white bg-primary"
-                : "text-white/60 bg-primary/80 hover:text-white/80"
-            }`}
-          >
-            🔍 חיפוש לפי רכב
-          </button>
-          <button
-            onClick={() => { setActiveTab("plate"); setShowConfirm(false); }}
-            className={`flex-1 px-6 py-4 text-sm font-bold transition-all ${
-              activeTab === "plate"
-                ? "text-white bg-primary"
-                : "text-white/60 bg-primary/80 hover:text-white/80"
-            }`}
-          >
-            🚗 חיפוש לפי מספר רכב
-          </button>
-        </div>
+      {/* Header */}
+      <div className="bg-primary px-6 py-3">
+        <h2 className="text-white font-bold text-lg text-center">חפשו טמבון לרכב שלכם</h2>
+      </div>
+
+      {/* Tab buttons */}
+      <div className="flex gap-3 px-5 py-4 bg-gray-50 border-b border-gray-200">
+        <button
+          onClick={() => { setActiveTab("manual"); setShowConfirm(false); }}
+          className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all border-2 ${
+            activeTab === "manual"
+              ? "bg-primary text-white border-primary shadow-lg"
+              : "bg-white text-gray-500 border-gray-200 hover:border-primary/40 hover:text-primary"
+          }`}
+        >
+          🔍 חיפוש לפי יצרן ודגם
+        </button>
+        <button
+          onClick={() => { setActiveTab("plate"); setShowConfirm(false); }}
+          className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all border-2 ${
+            activeTab === "plate"
+              ? "bg-primary text-white border-primary shadow-lg"
+              : "bg-white text-gray-500 border-gray-200 hover:border-primary/40 hover:text-primary"
+          }`}
+        >
+          🚗 חיפוש לפי מספר רכב
+        </button>
+      </div>
+
+      {/* Subtitle */}
+      <div className="px-6 pt-3">
         {activeTab === "manual" && (
-          <div className="px-6 pb-3">
-            <p className="text-white/70 text-sm">בחרו יצרן, דגם, שנה ומיקום</p>
-          </div>
+          <p className="text-gray-400 text-xs text-center">בחרו יצרן, דגם, שנה ומיקום</p>
         )}
         {activeTab === "plate" && (
-          <div className="px-6 pb-3">
-            <p className="text-white/70 text-sm">הזינו מספר רכב ונמצא לכם את הטמבון המתאים</p>
-          </div>
+          <p className="text-gray-400 text-xs text-center">הזינו מספר רכב ונמצא לכם את הטמבון המתאים</p>
         )}
       </div>
 
