@@ -133,7 +133,8 @@ export default function VehicleSelector() {
 
     const params = new URLSearchParams();
     params.set("make", vehicleInfo.make);
-    if (vehicleInfo.model) params.set("model", vehicleInfo.model);
+    // Don't filter by model — show all matching bumpers for this year
+    // This ensures variants (e.g. "מודל 3" AND "3 היילנד") are all shown
     if (vehicleInfo.year) params.set("year", vehicleInfo.year.toString());
     params.set("position", position);
     router.push(`/catalog?${params.toString()}`);
