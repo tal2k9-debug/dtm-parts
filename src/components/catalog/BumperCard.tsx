@@ -90,9 +90,17 @@ export default function BumperCard({ bumper, isLoggedIn, isFavorited, onToggleFa
             )}
             {/* Status badge overlay */}
             <div className="absolute top-3 right-3">
-              <Badge variant={getStatusBadgeVariant(bumper.status)} dot>
+              <span
+                className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full shadow-lg"
+                style={{
+                  backgroundColor: getStatusBadgeVariant(bumper.status) === "success" ? "#166534" : getStatusBadgeVariant(bumper.status) === "danger" ? "#991b1b" : "#ca8a04",
+                  color: "#ffffff",
+                  border: "1px solid rgba(0,0,0,0.2)",
+                }}
+              >
+                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: getStatusBadgeVariant(bumper.status) === "success" ? "#4ade80" : getStatusBadgeVariant(bumper.status) === "danger" ? "#f87171" : "#fde047" }} />
                 {getStatusLabel(bumper.status)}
-              </Badge>
+              </span>
             </div>
             {/* Favorite heart button */}
             <button
