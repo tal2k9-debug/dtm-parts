@@ -5,6 +5,7 @@ import { normalizeHebrew } from "@/lib/hebrewNormalize";
 export async function GET() {
   try {
     const results = await prisma.bumperCache.findMany({
+      where: { status: { in: ["במלאי", "כן"] } },
       select: { carMake: true },
       distinct: ["carMake"],
       orderBy: { carMake: "asc" },

@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
     const makeFilter = matchingMakes.length > 0 ? matchingMakes : [make];
 
     const results = await prisma.bumperCache.findMany({
-      where: { carMake: { in: makeFilter } },
+      where: { carMake: { in: makeFilter }, status: { in: ["במלאי", "כן"] } },
       select: { carModel: true },
       distinct: ["carModel"],
       orderBy: { carModel: "asc" },

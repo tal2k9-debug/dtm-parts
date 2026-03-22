@@ -43,6 +43,7 @@ export async function GET(request: NextRequest) {
       where: {
         carMake: { in: makeFilter },
         carModel: { in: modelFilter },
+        status: { in: ["במלאי", "כן"] },
       },
       select: { carYear: true },
       distinct: ["carYear"],
