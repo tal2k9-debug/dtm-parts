@@ -221,7 +221,7 @@ function BumperDetailPage({ id }: { id: string }) {
     fetch("/api/tracking", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type: "bumper_view", bumperId: bumper.mondayItemId }),
+      body: JSON.stringify({ type: "bumper_view", bumperId: bumper.id }),
     }).catch(() => {});
   }, [bumper]);
 

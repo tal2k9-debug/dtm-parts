@@ -159,7 +159,7 @@ export async function GET() {
     const topViewedIds = topViewedRaw.map((v) => v.bumperId);
     const bumperNames = topViewedIds.length > 0
       ? await prisma.bumperCache.findMany({
-          where: { OR: [{ mondayItemId: { in: topViewedIds } }, { id: { in: topViewedIds } }] },
+          where: { OR: [{ mondayItemId: { in: topViewedIds } }, { id: { in: topViewedIds } }, { name: { in: topViewedIds } }] },
           select: { id: true, mondayItemId: true, name: true, carMake: true, carModel: true, carYear: true },
         })
       : [];
@@ -167,6 +167,7 @@ export async function GET() {
     for (const b of bumperNames) {
       bumperNameMap[b.mondayItemId] = b;
       bumperNameMap[b.id] = b;
+      bumperNameMap[b.name] = b;
     }
 
     const topViewed = topViewedRaw.map((v) => ({
@@ -189,7 +190,7 @@ export async function GET() {
     const todayIds = topViewedTodayRaw.map((v) => v.bumperId);
     const todayBumpers = todayIds.length > 0
       ? await prisma.bumperCache.findMany({
-          where: { OR: [{ mondayItemId: { in: todayIds } }, { id: { in: todayIds } }] },
+          where: { OR: [{ mondayItemId: { in: todayIds } }, { id: { in: todayIds } }, { name: { in: todayIds } }] },
           select: { id: true, mondayItemId: true, name: true, carMake: true, carModel: true, carYear: true },
         })
       : [];
@@ -197,6 +198,7 @@ export async function GET() {
     for (const b of todayBumpers) {
       todayMap[b.mondayItemId] = b;
       todayMap[b.id] = b;
+      todayMap[b.name] = b;
     }
     const topViewedToday = topViewedTodayRaw.map((v) => ({
       bumperId: v.bumperId,
@@ -211,7 +213,7 @@ export async function GET() {
     const topFavIds = topFavoritedRaw.map((f) => f.bumperId);
     const favBumperNames = topFavIds.length > 0
       ? await prisma.bumperCache.findMany({
-          where: { OR: [{ mondayItemId: { in: topFavIds } }, { id: { in: topFavIds } }] },
+          where: { OR: [{ mondayItemId: { in: topFavIds } }, { id: { in: topFavIds } }, { name: { in: topFavIds } }] },
           select: { id: true, mondayItemId: true, name: true, carMake: true, carModel: true, carYear: true },
         })
       : [];
@@ -219,6 +221,7 @@ export async function GET() {
     for (const b of favBumperNames) {
       favNameMap[b.mondayItemId] = b;
       favNameMap[b.id] = b;
+      favNameMap[b.name] = b;
     }
 
     const topFavorited = topFavoritedRaw.map((f) => ({

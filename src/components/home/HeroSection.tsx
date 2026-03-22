@@ -6,7 +6,7 @@ import VehicleSelector from "./VehicleSelector";
 
 export default function HeroSection() {
   return (
-    <section className="relative min-h-[38vh] flex items-center gradient-hero overflow-hidden">
+    <section className="relative min-h-[32vh] flex items-center gradient-hero overflow-hidden">
       {/* Warehouse background image */}
       <img
         src="/images/DTM.png"
@@ -18,7 +18,7 @@ export default function HeroSection() {
       <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl" />
       <div className="absolute bottom-1/4 left-1/4 w-64 h-64 bg-accent/10 rounded-full blur-3xl" />
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-6 w-full">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-4 w-full">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Text */}
           <motion.div
