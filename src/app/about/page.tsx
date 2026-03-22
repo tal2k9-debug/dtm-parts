@@ -17,13 +17,13 @@ export default function AboutPage() {
       <Header />
       <main className="pt-20">
         {/* Hero with warehouse image */}
-        <section className="relative h-[50vh] min-h-[350px] flex items-center justify-center">
+        <section className="relative h-[50vh] min-h-[350px] flex items-center justify-center bg-gradient-to-br from-[#2563eb] via-[#1e40af] to-[#1a1a2e]">
           <img
             src="/images/DTM.png"
             alt="מחסן DTM PARTS — פגושים וטמבונים"
-            className="absolute inset-0 w-full h-full object-cover"
+            className="absolute inset-0 w-full h-full object-cover opacity-15 mix-blend-luminosity"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/30" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#1a1a2e]/90 via-transparent to-transparent" />
           <div className="relative z-10 text-center px-4">
             <h1 className="text-4xl sm:text-5xl font-extrabold text-white mb-4">
               DTM PARTS

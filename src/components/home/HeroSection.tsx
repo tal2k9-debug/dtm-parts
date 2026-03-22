@@ -45,8 +45,6 @@ export default function HeroSection() {
 
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white leading-tight mb-4">
               הטמבון שאתם צריכים
-              <br />
-              <span className="text-primary-light">במחיר הנכון</span>
             </h1>
 
             <p className="text-base sm:text-lg text-white/80 leading-relaxed mb-3 max-w-lg">
