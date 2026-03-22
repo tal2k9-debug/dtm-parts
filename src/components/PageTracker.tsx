@@ -58,8 +58,8 @@ export default function PageTracker() {
       // Don't send heartbeat for admin pages
       if (window.location.pathname.startsWith("/admin")) return;
 
-      // Check if viewing a bumper page
-      const bumperMatch = window.location.pathname.match(/^\/catalog\/(\d+)$/);
+      // Check if viewing a bumper page (e.g., /catalog/cmn0fz33l00yxb8ywh2lwugpt)
+      const bumperMatch = window.location.pathname.match(/^\/catalog\/([a-z0-9]{20,})$/);
       const bumperId = bumperMatch ? bumperMatch[1] : null;
 
       // Try to get bumper name from page title

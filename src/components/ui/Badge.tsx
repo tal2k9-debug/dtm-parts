@@ -11,9 +11,9 @@ interface BadgeProps {
 }
 
 const variantStyles: Record<BadgeVariant, string> = {
-  success: "bg-success/10 text-success border-success/20",
-  danger: "bg-danger/10 text-danger border-danger/20",
-  warning: "bg-warning/10 text-yellow-700 border-warning/20",
+  success: "bg-success/20 text-success border-success/30 font-semibold",
+  danger: "bg-danger/20 text-danger border-danger/30 font-semibold",
+  warning: "bg-warning/20 text-yellow-700 border-warning/30 font-semibold",
   info: "bg-primary/10 text-primary border-primary/20",
   neutral: "bg-gray-100 text-gray-600 border-gray-200",
 };
