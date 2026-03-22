@@ -294,6 +294,114 @@ export async function fetchSingleBumperFromMonday(itemId: string): Promise<Monda
   };
 }
 
+/**
+ * Smart sync: fetch only items that changed since last sync.
+ * Uses board activity log to find changed item IDs, then fetches only those items.
+ * This saves ~90% of API complexity compared to full sync.
+ */
+export async function fetchChangedBumpersFromMonday(sinceDate: Date): Promise<{
+  changedItems: MondayBumper[];
+  changedIds: string[];
+}> {
+  const apiKey = process.env.MONDAY_API_KEY;
+  if (!apiKey) throw new Error("MONDAY_API_KEY is not set");
+
+  // Step 1: Get activity log to find changed items (very low complexity)
+  const sinceStr = sinceDate.toISOString().split(".")[0] + "Z";
+  const activityQuery = `{
+    boards(ids: [${BUMPERS_BOARD_ID}]) {
+      activity_logs(from: "${sinceStr}", limit: 500) {
+        data
+        event
+        entity
+      }
+    }
+  }`;
+
+  const activityRes = await fetch(MONDAY_API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: apiKey },
+    body: JSON.stringify({ query: activityQuery }),
+  });
+
+  const activityData = await activityRes.json();
+
+  if (activityData?.errors) {
+    console.error("Monday activity API error:", activityData.errors);
+    throw new Error(activityData.errors[0]?.message || "Monday API error");
+  }
+
+  const logs = activityData?.data?.boards?.[0]?.activity_logs || [];
+
+  // Extract unique item IDs from activity
+  const changedIds = new Set<string>();
+  for (const log of logs) {
+    try {
+      const data = typeof log.data === "string" ? JSON.parse(log.data) : log.data;
+      if (data?.pulse_id) changedIds.add(String(data.pulse_id));
+      if (data?.item_id) changedIds.add(String(data.item_id));
+    } catch {
+      // Skip unparseable entries
+    }
+  }
+
+  if (changedIds.size === 0) {
+    return { changedItems: [], changedIds: [] };
+  }
+
+  // Step 2: Fetch only the changed items (much lower complexity)
+  const ids = [...changedIds];
+  const allItems: MondayItem[] = [];
+
+  // Batch fetch in groups of 100
+  for (let i = 0; i < ids.length; i += 100) {
+    const batch = ids.slice(i, i + 100);
+    const query = `{
+      items(ids: [${batch.join(",")}]) {
+        id
+        name
+        column_values {
+          id
+          text
+          value
+          type
+        }
+      }
+    }`;
+
+    const res = await fetch(MONDAY_API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: apiKey },
+      body: JSON.stringify({ query }),
+    });
+
+    const data = await res.json();
+    if (data?.errors) {
+      console.error("Monday items API error:", data.errors);
+      throw new Error(data.errors[0]?.message || "Monday API error");
+    }
+
+    const items = data?.data?.items || [];
+    allItems.push(...items);
+  }
+
+  const changedItems = allItems.map((item) => ({
+    mondayItemId: item.id,
+    catalogNumber: item.name,
+    carMake: getColumnText(item, "text"),
+    carModel: getColumnText(item, "text0"),
+    carYear: getColumnText(item, "text5"),
+    position: mapPosition(getColumnText(item, "color")),
+    color: getColumnText(item, "text4"),
+    condition: getColumnText(item, "text6"),
+    status: mapStatus(getColumnText(item, "color_mkwzjzja")),
+    imageUrls: getFileUrls(item),
+    imageAssets: getImageAssets(item),
+  }));
+
+  return { changedItems, changedIds: ids };
+}
+
 export async function fetchBumperAssetUrl(assetId: number): Promise<string | null> {
   const apiKey = process.env.MONDAY_API_KEY;
   if (!apiKey) return null;

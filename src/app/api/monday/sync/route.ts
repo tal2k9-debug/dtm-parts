@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { fetchBumpersFromMonday } from "@/lib/monday";
+import { fetchBumpersFromMonday, fetchChangedBumpersFromMonday } from "@/lib/monday";
 import type { MondayBumper } from "@/lib/monday";
 import { prisma } from "@/lib/prisma";
 import { withRetry, mondayCircuit } from "@/lib/resilience";
@@ -31,13 +31,54 @@ export async function GET(request: Request) {
       }
     }
 
-    const bumpers = await mondayCircuit.execute(() =>
-      withRetry(() => fetchBumpersFromMonday(), {
-        maxRetries: 2,
-        source: "monday_sync",
-        operation: "סנכרון מלאי מ-Monday",
-      })
-    );
+    // Determine sync mode: smart (default) or full (manual trigger with ?full=1)
+    const url = new URL(request.url);
+    const isFullSync = url.searchParams.get("full") === "1";
+
+    let bumpers: MondayBumper[];
+    let syncMode: string;
+
+    if (isFullSync) {
+      // Full sync: fetch all items (admin manual trigger only)
+      syncMode = "full";
+      bumpers = await mondayCircuit.execute(() =>
+        withRetry(() => fetchBumpersFromMonday(), {
+          maxRetries: 2,
+          source: "monday_sync",
+          operation: "סנכרון מלא מ-Monday",
+        })
+      );
+    } else {
+      // Smart sync: only fetch items that changed in the last 20 minutes
+      syncMode = "smart";
+      try {
+        const sinceDate = new Date(Date.now() - 20 * 60 * 1000); // 20 minutes ago
+        const { changedItems, changedIds } = await fetchChangedBumpersFromMonday(sinceDate);
+
+        if (changedIds.length === 0) {
+          return NextResponse.json({
+            success: true,
+            syncMode,
+            message: "אין שינויים מאז הסנכרון האחרון",
+            synced: 0,
+            errors: 0,
+          });
+        }
+
+        bumpers = changedItems;
+        await logger.info("monday_sync", `Smart sync: ${changedIds.length} items changed`);
+      } catch (smartErr) {
+        // If smart sync fails (e.g. API limit), log and return error
+        const errMsg = smartErr instanceof Error ? smartErr.message : "Unknown error";
+        await logger.error("monday_sync", `Smart sync failed: ${errMsg}`);
+
+        return NextResponse.json({
+          success: false,
+          syncMode,
+          error: errMsg,
+        }, { status: 502 });
+      }
+    }
 
     // Get old statuses before upserting (for stock alert comparison)
     const existingBumpers = await prisma.bumperCache.findMany({
@@ -282,6 +323,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       success: true,
+      syncMode,
       total: bumpers.length,
       synced,
       blobUploaded,
