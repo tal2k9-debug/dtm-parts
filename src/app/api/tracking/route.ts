@@ -7,7 +7,7 @@ import { prisma } from "@/lib/prisma";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { type, bumperId, path, sessionId, referrer } = body;
+    const { type, bumperId, path, sessionId, referrer, source } = body;
 
     const session = await getServerSession(authOptions);
     const user = session?.user as Record<string, unknown> | undefined;
@@ -25,6 +25,7 @@ export async function POST(request: Request) {
           bumperId,
           userId: userId || null,
           sessionId: sessionId || null,
+          source: source || null,
         },
       });
     } else if (type === "page_view" && path) {
@@ -34,6 +35,7 @@ export async function POST(request: Request) {
           userId: userId || null,
           sessionId: sessionId || null,
           referrer: referrer || null,
+          source: source || null,
         },
       });
     } else {

@@ -13,6 +13,16 @@ function getSessionId() {
   return id;
 }
 
+function getSource(): "app" | "browser" {
+  if (typeof window === "undefined") return "browser";
+  // Check if running as installed PWA/TWA (standalone mode)
+  if (window.matchMedia("(display-mode: standalone)").matches) return "app";
+  if ((window.navigator as unknown as Record<string, unknown>).standalone === true) return "app";
+  // Check TWA (Trusted Web Activity) via document referrer
+  if (document.referrer.includes("android-app://")) return "app";
+  return "browser";
+}
+
 export default function PageTracker() {
   const pathname = usePathname();
   const lastPath = useRef("");
@@ -26,6 +36,7 @@ export default function PageTracker() {
     if (pathname.startsWith("/admin")) return;
 
     const sessionId = getSessionId();
+    const source = getSource();
     fetch("/api/tracking", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -34,6 +45,7 @@ export default function PageTracker() {
         path: pathname,
         sessionId,
         referrer: document.referrer || null,
+        source,
       }),
     }).catch(() => {});
   }, [pathname]);

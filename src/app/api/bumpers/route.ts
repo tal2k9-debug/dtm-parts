@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get("status");
     const search = searchParams.get("search");
     const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
-    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "24", 10)));
+    const limit = Math.min(5000, Math.max(1, parseInt(searchParams.get("limit") || "24", 10)));
 
     const where: Prisma.BumperCacheWhereInput = {};
 

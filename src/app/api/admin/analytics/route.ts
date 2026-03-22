@@ -50,6 +50,10 @@ export async function GET() {
       // Unique visitors today
       uniqueVisitorsToday,
 
+      // App vs Browser
+      appViewsToday,
+      browserViewsToday,
+
       // Top viewed bumpers (last 30 days)
       topViewedRaw,
 
@@ -95,6 +99,10 @@ export async function GET() {
         by: ["sessionId"],
         where: { createdAt: { gte: todayStart }, sessionId: { not: null } },
       }).then((r) => r.length),
+
+      // App vs Browser page views today
+      prisma.pageView.count({ where: { createdAt: { gte: todayStart }, source: "app", OR: [{ userId: null }, { userId: { notIn: adminIds } }] } }),
+      prisma.pageView.count({ where: { createdAt: { gte: todayStart }, source: "browser", OR: [{ userId: null }, { userId: { notIn: adminIds } }] } }),
 
       prisma.bumperView.groupBy({
         by: ["bumperId"],
@@ -216,6 +224,8 @@ export async function GET() {
         pageViewsThisMonth,
         totalPageViews,
         uniqueVisitorsToday,
+        appViewsToday,
+        browserViewsToday,
         onlineNow: onlineCount,
       },
       requestsByStatus: {

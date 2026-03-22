@@ -47,7 +47,7 @@ export default function AdminInventoryPage() {
       setLoadingMore(true);
     }
     try {
-      const res = await fetch(`/api/bumpers?limit=100&page=${pageNum}`);
+      const res = await fetch(`/api/bumpers?limit=5000&page=${pageNum}`);
       const data = await res.json();
       if (data.bumpers) {
         if (append) {

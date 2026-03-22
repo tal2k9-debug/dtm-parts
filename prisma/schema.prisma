@@ -148,6 +148,7 @@ model BumperView {
   bumperId     String   // mondayItemId from BumperCache
   userId       String?  // null = anonymous visitor
   sessionId    String?  // for anonymous tracking
+  source       String?  // "app" or "browser"
   createdAt    DateTime @default(now())
 
   @@index([bumperId, createdAt])
@@ -161,6 +162,7 @@ model PageView {
   userId    String?
   sessionId String?
   referrer  String?
+  source    String?  // "app" or "browser"
   createdAt DateTime @default(now())
 
   @@index([path, createdAt])

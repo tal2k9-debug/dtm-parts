@@ -13,6 +13,8 @@ import {
   StarIcon,
   GlobeAltIcon,
   SignalIcon,
+  DevicePhoneMobileIcon,
+  ComputerDesktopIcon,
 } from "@heroicons/react/24/outline";
 
 interface Analytics {
@@ -32,6 +34,8 @@ interface Analytics {
     pageViewsThisMonth: number;
     totalPageViews: number;
     uniqueVisitorsToday: number;
+    appViewsToday: number;
+    browserViewsToday: number;
     onlineNow: number;
   };
   requestsByStatus: {
@@ -202,6 +206,22 @@ export default function AnalyticsPage() {
           value={overview.totalPageViews}
           sub={`השבוע: ${overview.pageViewsThisWeek} | החודש: ${overview.pageViewsThisMonth}`}
           color="bg-indigo-50 text-indigo-600"
+        />
+      </div>
+
+      {/* App vs Browser */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <StatCard
+          icon={DevicePhoneMobileIcon}
+          label="כניסות מאפליקציה היום"
+          value={overview.appViewsToday}
+          color="bg-teal-50 text-teal-600"
+        />
+        <StatCard
+          icon={ComputerDesktopIcon}
+          label="כניסות מדפדפן היום"
+          value={overview.browserViewsToday}
+          color="bg-orange-50 text-orange-600"
         />
       </div>
 
