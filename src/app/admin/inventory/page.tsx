@@ -158,15 +158,7 @@ export default function AdminInventoryPage() {
             {loading ? "..." : `${filtered.length} מתוך ${total} פריטים`}
           </p>
         </div>
-        <Button
-          size="sm"
-          variant="secondary"
-          isLoading={syncing}
-          onClick={handleSync}
-          icon={<ArrowPathIcon className="w-4 h-4" />}
-        >
-          סנכרון ממנדיי
-        </Button>
+        <span className="text-xs text-gray-400">סנכרון אוטומטי כל 15 דקות</span>
       </div>
       <Card>
         <div className="relative">
