@@ -11,7 +11,7 @@ export default function HeroSection() {
       <img
         src="/images/DTM.png"
         alt=""
-        className="absolute inset-0 w-full h-full object-cover opacity-20 mix-blend-soft-light"
+        className="absolute inset-0 w-full h-full object-cover opacity-30 mix-blend-soft-light"
       />
 
       {/* Glowing orbs */}
