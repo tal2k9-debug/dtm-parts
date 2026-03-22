@@ -7,17 +7,12 @@ import VehicleSelector from "./VehicleSelector";
 export default function HeroSection() {
   return (
     <section className="relative min-h-[45vh] flex items-center gradient-hero overflow-hidden">
-      {/* Background pattern */}
-      <div className="absolute inset-0 opacity-5">
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at 1px 1px, white 1px, transparent 1px)",
-            backgroundSize: "40px 40px",
-          }}
-        />
-      </div>
+      {/* Warehouse background image */}
+      <img
+        src="/images/DTM.png"
+        alt=""
+        className="absolute inset-0 w-full h-full object-cover opacity-20 mix-blend-soft-light"
+      />
 
       {/* Glowing orbs */}
       <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl" />

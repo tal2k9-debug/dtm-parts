@@ -21,7 +21,7 @@ export default function AboutPage() {
           <img
             src="/images/DTM.png"
             alt="מחסן DTM PARTS — פגושים וטמבונים"
-            className="absolute inset-0 w-full h-full object-cover opacity-15 mix-blend-luminosity"
+            className="absolute inset-0 w-full h-full object-cover opacity-25 mix-blend-soft-light"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#1a1a2e]/90 via-transparent to-transparent" />
           <div className="relative z-10 text-center px-4">

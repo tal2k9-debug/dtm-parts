@@ -91,7 +91,7 @@ export default function RegisterPage() {
     <div className="min-h-screen relative flex items-center justify-center px-4 py-8 bg-gradient-to-br from-[#2563eb] via-[#1e40af] to-[#1a1a2e]">
       {/* Background image */}
       <div className="absolute inset-0 z-0">
-        <img src="/images/DTM.png" alt="" className="w-full h-full object-cover opacity-10 mix-blend-luminosity" />
+        <img src="/images/DTM.png" alt="" className="w-full h-full object-cover opacity-20 mix-blend-soft-light" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#1a1a2e]/30 to-[#1a1a2e]/70" />
       </div>
       <div className="w-full max-w-md relative z-10">
