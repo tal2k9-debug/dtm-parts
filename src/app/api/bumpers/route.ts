@@ -29,10 +29,12 @@ export async function GET(request: NextRequest) {
 
     const make = searchParams.get("make");
     const model = searchParams.get("model");
+    const plateModel = searchParams.get("plateModel"); // Model from plate lookup (flexible matching)
     const year = searchParams.get("year");
     const position = searchParams.get("position");
     const status = searchParams.get("status");
     const search = searchParams.get("search");
+    const isPlateSearch = searchParams.get("plateSearch") === "1";
     const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
     const limit = Math.min(5000, Math.max(1, parseInt(searchParams.get("limit") || "24", 10)));
 
@@ -89,8 +91,44 @@ export async function GET(request: NextRequest) {
         where.carModel = { contains: model, mode: "insensitive" };
       }
     }
+    // Plate search: flexible model matching — find model + variants
+    // e.g. "מודל 3" should also find "3 היילנד", "מודל 3 פרפורמנס" etc.
+    if (!model && plateModel && isPlateSearch) {
+      const normalizedPlateModel = normalizeHebrew(plateModel);
+      const allModels = await prisma.bumperCache.findMany({
+        select: { carModel: true },
+        distinct: ["carModel"],
+        where: where.carMake ? { carMake: where.carMake as Prisma.StringFilter | string } : undefined,
+      });
+
+      // Extract key words from the model name (e.g. "מודל 3" → ["מודל", "3"], or just "3")
+      const modelWords = normalizedPlateModel.split(/\s+/);
+      const keyNumber = modelWords.find(w => /^\d+$/.test(w)); // e.g. "3" from "מודל 3"
+
+      const matchingModels = allModels
+        .map((m) => m.carModel)
+        .filter((m) => {
+          const norm = normalizeHebrew(m);
+          // Exact match
+          if (norm === normalizedPlateModel) return true;
+          // Starts with the model name
+          if (norm.startsWith(normalizedPlateModel + " ") || norm.startsWith(normalizedPlateModel + "/")) return true;
+          // Contains the model name
+          if (norm.includes(" " + normalizedPlateModel)) return true;
+          // If there's a key number (e.g. "3"), match models containing that number
+          // "3 היילנד" contains "3", "מודל 3" contains "3"
+          if (keyNumber && (norm.includes(keyNumber + " ") || norm.endsWith(keyNumber) || norm.startsWith(keyNumber + " "))) return true;
+          return false;
+        });
+
+      if (matchingModels.length > 0) {
+        where.carModel = { in: matchingModels };
+      }
+    }
     // Year filtering is handled post-query via doesYearMatch
+    // For plate search, also show nearby years (±2)
     const filterByYear = year ? parseInt(year) : null;
+    const isPlateYearSearch = isPlateSearch && filterByYear;
     if (position && (position === "FRONT" || position === "REAR")) {
       where.position = position as Position;
     }
@@ -116,9 +154,20 @@ export async function GET(request: NextRequest) {
         orderBy: { lastSynced: "desc" },
       });
 
-      const yearFiltered = allRaw.filter((b) =>
-        doesYearMatch(b.carYear, filterByYear)
-      );
+      let yearFiltered;
+      if (isPlateYearSearch) {
+        // For plate search: show bumpers matching the exact year OR nearby years (±2)
+        yearFiltered = allRaw.filter((b) => {
+          for (let y = filterByYear - 2; y <= filterByYear + 2; y++) {
+            if (doesYearMatch(b.carYear, y)) return true;
+          }
+          return false;
+        });
+      } else {
+        yearFiltered = allRaw.filter((b) =>
+          doesYearMatch(b.carYear, filterByYear)
+        );
+      }
 
       // Sort: bumpers with blob images first
       yearFiltered.sort((a, b) => {

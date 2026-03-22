@@ -133,6 +133,11 @@ export default function CatalogContent() {
     if (filterYear) params.set("year", filterYear);
     if (filterPosition) params.set("position", filterPosition);
     if (filterStatus) params.set("status", filterStatus);
+    // Pass plate search params if present
+    const plateModel = searchParams.get("plateModel");
+    const plateSearch = searchParams.get("plateSearch");
+    if (plateModel && plateSearch) params.set("plateModel", plateModel);
+    if (plateSearch) params.set("plateSearch", plateSearch);
     params.set("limit", String(ITEMS_PER_PAGE));
     params.set("page", String(pageNum));
 
