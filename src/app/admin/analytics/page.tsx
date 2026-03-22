@@ -50,6 +50,15 @@ interface Analytics {
     name: string;
     carMake: string;
     carModel: string;
+    carYear: string;
+  }>;
+  topViewedToday: Array<{
+    bumperId: string;
+    views: number;
+    name: string;
+    carMake: string;
+    carModel: string;
+    carYear: string;
   }>;
   topRequested: Array<{
     carMake: string;
@@ -60,6 +69,9 @@ interface Analytics {
     bumperId: string;
     favorites: number;
     name: string;
+    carMake: string;
+    carModel: string;
+    carYear: string;
   }>;
   recentRequests: Array<{
     id: string;
@@ -168,8 +180,9 @@ export default function AnalyticsPage() {
     );
   }
 
-  const { overview, topViewed, topRequested, topFavorited, recentRequests, requestsByStatus } = data;
+  const { overview, topViewed, topViewedToday, topRequested, topFavorited, recentRequests, requestsByStatus } = data;
   const maxViews = topViewed.length > 0 ? topViewed[0].views : 1;
+  const maxViewsToday = topViewedToday?.length > 0 ? topViewedToday[0].views : 1;
   const maxRequested = topRequested.length > 0 ? topRequested[0].count : 1;
   const maxFavorited = topFavorited.length > 0 ? topFavorited[0].favorites : 1;
 
@@ -276,7 +289,29 @@ export default function AnalyticsPage() {
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Top Viewed Bumpers */}
+        {/* Top Viewed Today */}
+        <Card>
+          <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <EyeIcon className="w-5 h-5 text-orange-500" />
+            טמבונים הכי נצפים היום
+          </h2>
+          {!topViewedToday || topViewedToday.length === 0 ? (
+            <p className="text-sm text-gray-400 text-center py-6">אין צפיות היום עדיין</p>
+          ) : (
+            <div className="space-y-3">
+              {topViewedToday.map((item, i) => (
+                <SimpleBar
+                  key={item.bumperId}
+                  label={`${i + 1}. ${item.carMake} ${item.carModel} ${item.carYear}`}
+                  value={item.views}
+                  maxValue={maxViewsToday}
+                />
+              ))}
+            </div>
+          )}
+        </Card>
+
+        {/* Top Viewed Bumpers 30 days */}
         <Card>
           <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
             <EyeIcon className="w-5 h-5 text-blue-500" />
@@ -289,7 +324,7 @@ export default function AnalyticsPage() {
               {topViewed.map((item, i) => (
                 <SimpleBar
                   key={item.bumperId}
-                  label={`${i + 1}. ${item.name}`}
+                  label={`${i + 1}. ${item.carMake} ${item.carModel} ${item.carYear}`}
                   value={item.views}
                   maxValue={maxViews}
                 />
@@ -333,7 +368,7 @@ export default function AnalyticsPage() {
               {topFavorited.map((item, i) => (
                 <SimpleBar
                   key={item.bumperId}
-                  label={`${i + 1}. ${item.name}`}
+                  label={`${i + 1}. ${item.carMake} ${item.carModel} ${item.carYear}`}
                   value={item.favorites}
                   maxValue={maxFavorited}
                 />

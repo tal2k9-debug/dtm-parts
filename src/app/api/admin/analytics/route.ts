@@ -160,7 +160,7 @@ export async function GET() {
     const bumperNames = topViewedIds.length > 0
       ? await prisma.bumperCache.findMany({
           where: { mondayItemId: { in: topViewedIds } },
-          select: { mondayItemId: true, name: true, carMake: true, carModel: true },
+          select: { mondayItemId: true, name: true, carMake: true, carModel: true, carYear: true },
         })
       : [];
     const bumperNameMap = Object.fromEntries(bumperNames.map((b) => [b.mondayItemId, b]));
@@ -171,6 +171,32 @@ export async function GET() {
       name: bumperNameMap[v.bumperId]?.name || v.bumperId,
       carMake: bumperNameMap[v.bumperId]?.carMake || "",
       carModel: bumperNameMap[v.bumperId]?.carModel || "",
+      carYear: bumperNameMap[v.bumperId]?.carYear || "",
+    }));
+
+    // Top viewed TODAY
+    const topViewedTodayRaw = await prisma.bumperView.groupBy({
+      by: ["bumperId"],
+      _count: { bumperId: true },
+      where: { createdAt: { gte: todayStart } },
+      orderBy: { _count: { bumperId: "desc" } },
+      take: 5,
+    });
+    const todayIds = topViewedTodayRaw.map((v) => v.bumperId);
+    const todayBumpers = todayIds.length > 0
+      ? await prisma.bumperCache.findMany({
+          where: { mondayItemId: { in: todayIds } },
+          select: { mondayItemId: true, name: true, carMake: true, carModel: true, carYear: true },
+        })
+      : [];
+    const todayMap = Object.fromEntries(todayBumpers.map((b) => [b.mondayItemId, b]));
+    const topViewedToday = topViewedTodayRaw.map((v) => ({
+      bumperId: v.bumperId,
+      views: v._count.bumperId,
+      name: todayMap[v.bumperId]?.name || v.bumperId,
+      carMake: todayMap[v.bumperId]?.carMake || "",
+      carModel: todayMap[v.bumperId]?.carModel || "",
+      carYear: todayMap[v.bumperId]?.carYear || "",
     }));
 
     // Enrich top favorited
@@ -178,15 +204,18 @@ export async function GET() {
     const favBumperNames = topFavIds.length > 0
       ? await prisma.bumperCache.findMany({
           where: { mondayItemId: { in: topFavIds } },
-          select: { mondayItemId: true, name: true },
+          select: { mondayItemId: true, name: true, carMake: true, carModel: true, carYear: true },
         })
       : [];
-    const favNameMap = Object.fromEntries(favBumperNames.map((b) => [b.mondayItemId, b.name]));
+    const favNameMap = Object.fromEntries(favBumperNames.map((b) => [b.mondayItemId, b]));
 
     const topFavorited = topFavoritedRaw.map((f) => ({
       bumperId: f.bumperId,
       favorites: f._count.bumperId,
-      name: favNameMap[f.bumperId] || f.bumperId,
+      name: favNameMap[f.bumperId]?.name || f.bumperId,
+      carMake: favNameMap[f.bumperId]?.carMake || "",
+      carModel: favNameMap[f.bumperId]?.carModel || "",
+      carYear: favNameMap[f.bumperId]?.carYear || "",
     }));
 
     const topRequested = topRequestedRaw.map((r) => ({
@@ -236,6 +265,7 @@ export async function GET() {
         cancelled: statusMap["CANCELLED"] || 0,
       },
       topViewed,
+      topViewedToday,
       topRequested,
       topFavorited,
       recentRequests: recentRequests.map((r) => ({
