@@ -111,7 +111,7 @@ export default function AdminCustomersPage() {
                     <td className="py-3 px-4 text-gray-600">{cust.businessName || "—"}</td>
                     <td className="py-3 px-4 text-gray-500 text-xs">{cust.businessId || "—"}</td>
                     <td className="py-3 px-4">
-                      <Badge variant={cust.role === "VIP" ? "warning" : cust.role === "ADMIN" ? "error" : "neutral"} dot>
+                      <Badge variant={cust.role === "VIP" ? "warning" : cust.role === "ADMIN" ? "danger" : "neutral"} dot>
                         {cust.role === "VIP" ? "VIP" : cust.role === "ADMIN" ? "מנהל" : "לקוח"}
                       </Badge>
                     </td>
