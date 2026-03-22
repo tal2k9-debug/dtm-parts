@@ -3,15 +3,18 @@
 import { useState, useEffect } from "react";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
-import { MagnifyingGlassIcon, EyeIcon, PhoneIcon } from "@heroicons/react/24/outline";
+import { MagnifyingGlassIcon, EyeIcon, PhoneIcon, EnvelopeIcon } from "@heroicons/react/24/outline";
 
 interface Customer {
   id: string;
   name: string;
+  username: string;
   phone: string;
   email: string | null;
   businessName: string | null;
   businessType: string | null;
+  businessId: string | null;
+  businessAddress: string | null;
   role: string;
   createdAt: string;
   lastLogin: string | null;
@@ -43,8 +46,20 @@ export default function AdminCustomersPage() {
 
   const filtered = customers.filter((c) => {
     if (!search) return true;
-    return c.name.includes(search) || c.phone.includes(search) || (c.businessName && c.businessName.includes(search));
+    const s = search.toLowerCase();
+    return (
+      c.name.toLowerCase().includes(s) ||
+      c.phone.includes(s) ||
+      (c.email && c.email.toLowerCase().includes(s)) ||
+      (c.username && c.username.toLowerCase().includes(s)) ||
+      (c.businessName && c.businessName.includes(s))
+    );
   });
+
+  const formatDate = (dateStr: string | null) => {
+    if (!dateStr) return "—";
+    return new Date(dateStr).toLocaleDateString("he-IL", { day: "2-digit", month: "2-digit", year: "numeric" });
+  };
 
   return (
     <div className="space-y-6">
@@ -64,18 +79,23 @@ export default function AdminCustomersPage() {
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50/50">
                 <th className="text-right py-3 px-4 font-medium text-gray-500">שם</th>
+                <th className="text-right py-3 px-4 font-medium text-gray-500">שם משתמש</th>
                 <th className="text-right py-3 px-4 font-medium text-gray-500">טלפון</th>
+                <th className="text-right py-3 px-4 font-medium text-gray-500">מייל</th>
                 <th className="text-right py-3 px-4 font-medium text-gray-500">עסק</th>
+                <th className="text-right py-3 px-4 font-medium text-gray-500">ח.פ.</th>
                 <th className="text-right py-3 px-4 font-medium text-gray-500">סוג</th>
+                <th className="text-right py-3 px-4 font-medium text-gray-500">הצטרף</th>
+                <th className="text-right py-3 px-4 font-medium text-gray-500">כניסה אחרונה</th>
                 <th className="text-right py-3 px-4 font-medium text-gray-500">בקשות</th>
                 <th className="text-right py-3 px-4 font-medium text-gray-500">פעולות</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {loading ? (
-                <tr><td colSpan={6} className="text-center py-8 text-gray-400">טוען...</td></tr>
+                <tr><td colSpan={11} className="text-center py-8 text-gray-400">טוען...</td></tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={6} className="text-center py-8 text-gray-400">אין לקוחות</td></tr>
+                <tr><td colSpan={11} className="text-center py-8 text-gray-400">אין לקוחות</td></tr>
               ) : (
                 filtered.map((cust) => (
                   <tr key={cust.id} className="hover:bg-gray-50/50 transition-colors">
@@ -85,14 +105,24 @@ export default function AdminCustomersPage() {
                         <span className="font-medium text-gray-900">{cust.name}</span>
                       </div>
                     </td>
-                    <td className="py-3 px-4 text-gray-600">{cust.phone}</td>
-                    <td className="py-3 px-4 text-gray-600">{cust.businessName || "\u2014"}</td>
-                    <td className="py-3 px-4"><Badge variant={cust.role === "VIP" ? "warning" : "neutral"} dot>{cust.role === "VIP" ? "VIP" : "לקוח"}</Badge></td>
+                    <td className="py-3 px-4 text-gray-500 text-xs">{cust.username}</td>
+                    <td className="py-3 px-4 text-gray-600">{cust.phone || "—"}</td>
+                    <td className="py-3 px-4 text-gray-600 text-xs">{cust.email || "—"}</td>
+                    <td className="py-3 px-4 text-gray-600">{cust.businessName || "—"}</td>
+                    <td className="py-3 px-4 text-gray-500 text-xs">{cust.businessId || "—"}</td>
+                    <td className="py-3 px-4">
+                      <Badge variant={cust.role === "VIP" ? "warning" : cust.role === "ADMIN" ? "error" : "neutral"} dot>
+                        {cust.role === "VIP" ? "VIP" : cust.role === "ADMIN" ? "מנהל" : "לקוח"}
+                      </Badge>
+                    </td>
+                    <td className="py-3 px-4 text-gray-500 text-xs">{formatDate(cust.createdAt)}</td>
+                    <td className="py-3 px-4 text-gray-500 text-xs">{formatDate(cust.lastLogin)}</td>
                     <td className="py-3 px-4 text-gray-600">{cust._count.requests}</td>
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-1">
                         <a href={`/admin/customers/${cust.id}`} className="p-1.5 text-gray-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"><EyeIcon className="w-4 h-4" /></a>
-                        <a href={`tel:${cust.phone}`} className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"><PhoneIcon className="w-4 h-4" /></a>
+                        {cust.phone && <a href={`tel:${cust.phone}`} className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"><PhoneIcon className="w-4 h-4" /></a>}
+                        {cust.email && <a href={`mailto:${cust.email}`} className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"><EnvelopeIcon className="w-4 h-4" /></a>}
                       </div>
                     </td>
                   </tr>

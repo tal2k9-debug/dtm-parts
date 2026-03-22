@@ -19,9 +19,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
 
-    const where: Record<string, unknown> = {
-      role: { not: "ADMIN" },
-    };
+    const where: Record<string, unknown> = {};
 
     if (search) {
       where.OR = [
@@ -36,11 +34,13 @@ export async function GET(request: Request) {
       select: {
         id: true,
         name: true,
+        username: true,
         phone: true,
         email: true,
         businessName: true,
         businessType: true,
         businessId: true,
+        businessAddress: true,
         role: true,
         createdAt: true,
         lastLogin: true,
