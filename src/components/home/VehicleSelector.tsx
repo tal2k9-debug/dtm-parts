@@ -63,6 +63,14 @@ export default function VehicleSelector() {
   const handleYearChange = (value: string) => {
     setSelectedYear(value);
     setSelectedPosition("");
+    // Auto-search when year is selected
+    if (value && selectedMake) {
+      const params = new URLSearchParams();
+      params.set("make", selectedMake);
+      if (selectedModel) params.set("model", selectedModel);
+      params.set("year", value);
+      router.push(`/catalog?${params.toString()}`);
+    }
   };
 
   const handleSearch = () => {
@@ -135,7 +143,17 @@ export default function VehicleSelector() {
           <div className="flex-1">
             <select
               value={selectedPosition}
-              onChange={(e) => setSelectedPosition(e.target.value)}
+              onChange={(e) => {
+                setSelectedPosition(e.target.value);
+                if (e.target.value && selectedMake) {
+                  const params = new URLSearchParams();
+                  params.set("make", selectedMake);
+                  if (selectedModel) params.set("model", selectedModel);
+                  if (selectedYear) params.set("year", selectedYear);
+                  params.set("position", e.target.value);
+                  router.push(`/catalog?${params.toString()}`);
+                }
+              }}
               disabled={!selectedYear}
               className="w-full h-12 px-4 rounded-xl border-2 border-border bg-white text-sm font-medium text-text appearance-none cursor-pointer hover:border-primary focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none disabled:opacity-50 disabled:cursor-not-allowed"
             >
