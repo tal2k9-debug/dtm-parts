@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { prisma } from "@/lib/prisma";
+import { isExcludedUser } from "@/lib/excludedUsers";
 
 // POST /api/tracking — Track a bumper view or page view
 export async function POST(request: Request) {
@@ -14,8 +15,8 @@ export async function POST(request: Request) {
     const userId = user?.id as string | undefined;
     const role = user?.role as string | undefined;
 
-    // Don't track admin visits
-    if (role === "ADMIN") {
+    // Don't track admin or excluded user visits
+    if (isExcludedUser(userId, role)) {
       return NextResponse.json({ success: true });
     }
 

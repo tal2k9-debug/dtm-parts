@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { isExcludedUser } from "@/lib/excludedUsers";
 
 interface ActiveSession {
   timestamp: number;
@@ -33,8 +34,9 @@ export async function POST(request: Request) {
     const user = session?.user as Record<string, unknown> | undefined;
     const role = user?.role as string | undefined;
 
-    // Don't count admin
-    if (role === "ADMIN") {
+    // Don't count admin or excluded users
+    const userId = user?.id as string | undefined;
+    if (isExcludedUser(userId, role)) {
       return NextResponse.json({ success: true });
     }
 

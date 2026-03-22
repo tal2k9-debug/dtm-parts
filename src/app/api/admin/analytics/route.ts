@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { prisma } from "@/lib/prisma";
+import { EXCLUDED_USER_IDS } from "@/lib/excludedUsers";
 
 export async function GET() {
   try {
@@ -21,7 +22,7 @@ export async function GET() {
       where: { role: "ADMIN" },
       select: { id: true },
     });
-    const adminIds = adminUsers.map((u) => u.id);
+    const adminIds = [...adminUsers.map((u) => u.id), ...EXCLUDED_USER_IDS];
 
     // Run all queries in parallel
     const [
