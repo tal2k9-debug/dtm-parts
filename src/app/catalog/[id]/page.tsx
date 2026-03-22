@@ -438,7 +438,7 @@ function BumperDetailPage({ id }: { id: string }) {
                   <Button fullWidth size="lg" icon={<ShoppingBagIcon className="w-5 h-5" />}>שלח בקשת מחיר</Button>
                 </Link>
                 <a href={`${ADMIN_WHATSAPP_LINK}?text=${encodeURIComponent(`היי, אני מעוניין בטמבון מספר ${bumper.name}\n${bumper.carMake} ${bumper.carModel} ${bumper.carYear} — ${bumper.position ? getPositionLabel(bumper.position) : ""}\nhttps://dtmparts.co.il/catalog/${id}`)}`} target="_blank" rel="noopener noreferrer">
-                  <Button fullWidth size="lg" variant="whatsapp" className="mt-3">שלח הודעה בוואטסאפ</Button>
+                  <Button fullWidth size="lg" variant="whatsapp" className="mt-3">שלח לנו בוואטסאפ</Button>
                 </a>
                 <a href={`tel:${ADMIN_PHONE_INTL}`}>
                   <Button fullWidth size="lg" variant="secondary" icon={<PhoneIcon className="w-5 h-5" />} className="mt-3">התקשרו אלינו</Button>
