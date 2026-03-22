@@ -159,11 +159,15 @@ export async function GET() {
     const topViewedIds = topViewedRaw.map((v) => v.bumperId);
     const bumperNames = topViewedIds.length > 0
       ? await prisma.bumperCache.findMany({
-          where: { mondayItemId: { in: topViewedIds } },
-          select: { mondayItemId: true, name: true, carMake: true, carModel: true, carYear: true },
+          where: { OR: [{ mondayItemId: { in: topViewedIds } }, { id: { in: topViewedIds } }] },
+          select: { id: true, mondayItemId: true, name: true, carMake: true, carModel: true, carYear: true },
         })
       : [];
-    const bumperNameMap = Object.fromEntries(bumperNames.map((b) => [b.mondayItemId, b]));
+    const bumperNameMap: Record<string, typeof bumperNames[0]> = {};
+    for (const b of bumperNames) {
+      bumperNameMap[b.mondayItemId] = b;
+      bumperNameMap[b.id] = b;
+    }
 
     const topViewed = topViewedRaw.map((v) => ({
       bumperId: v.bumperId,
@@ -185,11 +189,15 @@ export async function GET() {
     const todayIds = topViewedTodayRaw.map((v) => v.bumperId);
     const todayBumpers = todayIds.length > 0
       ? await prisma.bumperCache.findMany({
-          where: { mondayItemId: { in: todayIds } },
-          select: { mondayItemId: true, name: true, carMake: true, carModel: true, carYear: true },
+          where: { OR: [{ mondayItemId: { in: todayIds } }, { id: { in: todayIds } }] },
+          select: { id: true, mondayItemId: true, name: true, carMake: true, carModel: true, carYear: true },
         })
       : [];
-    const todayMap = Object.fromEntries(todayBumpers.map((b) => [b.mondayItemId, b]));
+    const todayMap: Record<string, typeof todayBumpers[0]> = {};
+    for (const b of todayBumpers) {
+      todayMap[b.mondayItemId] = b;
+      todayMap[b.id] = b;
+    }
     const topViewedToday = topViewedTodayRaw.map((v) => ({
       bumperId: v.bumperId,
       views: v._count.bumperId,
@@ -203,11 +211,15 @@ export async function GET() {
     const topFavIds = topFavoritedRaw.map((f) => f.bumperId);
     const favBumperNames = topFavIds.length > 0
       ? await prisma.bumperCache.findMany({
-          where: { mondayItemId: { in: topFavIds } },
-          select: { mondayItemId: true, name: true, carMake: true, carModel: true, carYear: true },
+          where: { OR: [{ mondayItemId: { in: topFavIds } }, { id: { in: topFavIds } }] },
+          select: { id: true, mondayItemId: true, name: true, carMake: true, carModel: true, carYear: true },
         })
       : [];
-    const favNameMap = Object.fromEntries(favBumperNames.map((b) => [b.mondayItemId, b]));
+    const favNameMap: Record<string, typeof favBumperNames[0]> = {};
+    for (const b of favBumperNames) {
+      favNameMap[b.mondayItemId] = b;
+      favNameMap[b.id] = b;
+    }
 
     const topFavorited = topFavoritedRaw.map((f) => ({
       bumperId: f.bumperId,
