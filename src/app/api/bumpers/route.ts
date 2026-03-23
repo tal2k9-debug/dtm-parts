@@ -156,14 +156,23 @@ export async function GET(request: NextRequest) {
 
       let yearFiltered;
       if (isPlateYearSearch) {
-        // For plate search: show bumpers matching the exact year only
-        yearFiltered = allRaw.filter((b) =>
-          doesYearMatch(b.carYear, filterByYear)
-        );
+        // For plate search: use yearFrom/yearTo if available (much more accurate)
+        yearFiltered = allRaw.filter((b) => {
+          if (b.yearFrom != null) {
+            const to = b.yearTo ?? b.yearFrom + 3; // if no yearTo, assume +3
+            return filterByYear >= b.yearFrom && filterByYear <= to;
+          }
+          // Fallback to text-based matching
+          return doesYearMatch(b.carYear, filterByYear);
+        });
       } else {
-        yearFiltered = allRaw.filter((b) =>
-          doesYearMatch(b.carYear, filterByYear)
-        );
+        yearFiltered = allRaw.filter((b) => {
+          if (b.yearFrom != null) {
+            const to = b.yearTo ?? b.yearFrom + 3;
+            return filterByYear >= b.yearFrom && filterByYear <= to;
+          }
+          return doesYearMatch(b.carYear, filterByYear);
+        });
       }
 
       // Sort: bumpers with blob images first

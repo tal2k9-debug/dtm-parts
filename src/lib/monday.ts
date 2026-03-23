@@ -26,6 +26,9 @@ export interface MondayBumper {
   carMake: string;
   carModel: string;
   carYear: string;
+  yearFrom: number | null;
+  yearTo: number | null;
+  subModel: string;
   position: "FRONT" | "REAR" | null;
   color: string;
   condition: string;
@@ -133,6 +136,15 @@ function mapPosition(text: string): "FRONT" | "REAR" | null {
   return null;
 }
 
+function parseYear(text: string): number | null {
+  if (!text) return null;
+  const num = parseInt(text.trim());
+  if (isNaN(num)) return null;
+  if (num >= 1990 && num <= 2035) return num;
+  if (num >= 0 && num <= 99) return num < 50 ? 2000 + num : 1900 + num;
+  return null;
+}
+
 function mapStatus(text: string): string {
   // Monday column uses "כן"/"לא" but we display "במלאי"/"אזל"
   if (text === "כן") return "במלאי";
@@ -236,6 +248,9 @@ export async function fetchBumpersFromMonday(): Promise<MondayBumper[]> {
     carMake: getColumnText(item, "text"),
     carModel: getColumnText(item, "text0"),
     carYear: getColumnText(item, "text5"),
+    yearFrom: parseYear(getColumnText(item, "text_mm1h8ypw")),
+    yearTo: parseYear(getColumnText(item, "text_mm1hwyn2")),
+    subModel: getColumnText(item, "text_mm1kzm2s"),
     position: mapPosition(getColumnText(item, "color")),
     color: getColumnText(item, "text4"),
     condition: getColumnText(item, "text6"),
@@ -285,6 +300,9 @@ export async function fetchSingleBumperFromMonday(itemId: string): Promise<Monda
     carMake: getColumnText(item, "text"),
     carModel: getColumnText(item, "text0"),
     carYear: getColumnText(item, "text5"),
+    yearFrom: parseYear(getColumnText(item, "text_mm1h8ypw")),
+    yearTo: parseYear(getColumnText(item, "text_mm1hwyn2")),
+    subModel: getColumnText(item, "text_mm1kzm2s"),
     position: mapPosition(getColumnText(item, "color")),
     color: getColumnText(item, "text4"),
     condition: getColumnText(item, "text6"),
@@ -391,6 +409,9 @@ export async function fetchChangedBumpersFromMonday(sinceDate: Date): Promise<{
     carMake: getColumnText(item, "text"),
     carModel: getColumnText(item, "text0"),
     carYear: getColumnText(item, "text5"),
+    yearFrom: parseYear(getColumnText(item, "text_mm1h8ypw")),
+    yearTo: parseYear(getColumnText(item, "text_mm1hwyn2")),
+    subModel: getColumnText(item, "text_mm1kzm2s"),
     position: mapPosition(getColumnText(item, "color")),
     color: getColumnText(item, "text4"),
     condition: getColumnText(item, "text6"),

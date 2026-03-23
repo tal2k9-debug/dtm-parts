@@ -170,15 +170,18 @@ model PageView {
 }
 
 model BumperCache {
-  id           String    @id @default(cuid())
-  mondayItemId String    @unique
-  name         String
-  carMake      String
-  carModel     String
-  carYear      String
-  position     Position?
-  price        Float?
-  status       String
+  id            String    @id @default(cuid())
+  mondayItemId  String    @unique
+  name          String
+  carMake       String
+  carModel      String
+  carYear       String
+  yearFrom      Int?      // שנה מ (מספר, למשל 2018)
+  yearTo        Int?      // שנה עד (מספר, למשל 2021)
+  subModel      String?   // תת דגם (למשל: היילנד, AMG, GTI)
+  position      Position?
+  price         Float?
+  status        String
   imageUrl      String?
   imageUrls     String[]  @default([])
   blobImageUrl  String?
