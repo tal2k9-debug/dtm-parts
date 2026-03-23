@@ -17,7 +17,8 @@ interface VehicleInfo {
 
 export default function VehicleSelector() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<SearchTab>("plate");
+  const [activeTab, setActiveTab] = useState<SearchTab>("manual");
+  const SHOW_PLATE_SEARCH = false; // TODO: enable when plate search is ready
 
   // === Manual search state ===
   const [makes, setMakes] = useState<string[]>([]);
@@ -150,6 +151,7 @@ export default function VehicleSelector() {
       </div>
 
       {/* Tab buttons */}
+      {SHOW_PLATE_SEARCH && (
       <div className="flex gap-3 px-5 py-4 bg-gray-50 border-b border-gray-200">
         <button
           onClick={() => { setActiveTab("manual"); setShowConfirm(false); }}
@@ -172,6 +174,7 @@ export default function VehicleSelector() {
           🚗 חיפוש לפי מספר רכב
         </button>
       </div>
+      )}
 
       {/* Subtitle */}
       <div className="px-6 pt-3">
