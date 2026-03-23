@@ -53,6 +53,7 @@ export const NAV_LINKS = [
 
 export const ADMIN_NAV_LINKS = [
   { href: "/admin", label: "דשבורד" },
+  { href: "/admin/scan", label: "קליטת פגוש" },
   { href: "/admin/requests", label: "בקשות" },
   { href: "/admin/customers", label: "לקוחות" },
   { href: "/admin/inventory", label: "מלאי" },

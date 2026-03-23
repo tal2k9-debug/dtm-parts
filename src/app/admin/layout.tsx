@@ -22,10 +22,12 @@ import {
   Bars3Icon,
   XMarkIcon,
   BellIcon,
+  CameraIcon,
 } from "@heroicons/react/24/outline";
 
 const navIcons: Record<string, React.ReactNode> = {
   "/admin": <ChartBarIcon className="w-5 h-5" />,
+  "/admin/scan": <CameraIcon className="w-5 h-5" />,
   "/admin/requests": <ClipboardDocumentListIcon className="w-5 h-5" />,
   "/admin/customers": <UsersIcon className="w-5 h-5" />,
   "/admin/inventory": <CubeIcon className="w-5 h-5" />,
