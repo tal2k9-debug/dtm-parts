@@ -17,7 +17,7 @@ interface VehicleInfo {
 
 export default function VehicleSelector() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<SearchTab>("manual");
+  const [activeTab, setActiveTab] = useState<SearchTab>("plate");
 
   // === Manual search state ===
   const [makes, setMakes] = useState<string[]>([]);
