@@ -93,7 +93,7 @@ export default function BumperCard({ bumper, isLoggedIn, isFavorited, onToggleFa
               <span
                 className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full shadow-lg ${getStatusBadgeVariant(bumper.status) === "success" ? "animate-pulse-subtle" : ""}`}
                 style={{
-                  backgroundColor: getStatusBadgeVariant(bumper.status) === "success" ? "#1a1a6e" : getStatusBadgeVariant(bumper.status) === "danger" ? "#991b1b" : "#ca8a04",
+                  backgroundColor: getStatusBadgeVariant(bumper.status) === "success" ? "#1a1a2e" : getStatusBadgeVariant(bumper.status) === "danger" ? "#991b1b" : "#ca8a04",
                   color: "#ffffff",
                   border: "1px solid rgba(255,255,255,0.3)",
                   animation: getStatusBadgeVariant(bumper.status) === "success" ? "badgePulse 3s ease-in-out infinite" : "none",
