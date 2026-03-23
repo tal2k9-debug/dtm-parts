@@ -301,7 +301,6 @@ const MODEL_MAP: Record<string, string> = {
   "MITO": "מיטו",
   "TONALE": "רומיאו טונלה",
   "JUNIOR": "רומיאו גוניור",
-  "T-CROSS": "T CROSS טיקרוס",
   "T CROSS": "T CROSS טיקרוס",
   "TCROSS": "T CROSS טיקרוס",
   "AMAROK": "אמרוק",
