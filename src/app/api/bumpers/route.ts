@@ -156,13 +156,10 @@ export async function GET(request: NextRequest) {
 
       let yearFiltered;
       if (isPlateYearSearch) {
-        // For plate search: show bumpers matching the exact year OR nearby years (±2)
-        yearFiltered = allRaw.filter((b) => {
-          for (let y = filterByYear - 2; y <= filterByYear + 2; y++) {
-            if (doesYearMatch(b.carYear, y)) return true;
-          }
-          return false;
-        });
+        // For plate search: show bumpers matching the exact year only
+        yearFiltered = allRaw.filter((b) =>
+          doesYearMatch(b.carYear, filterByYear)
+        );
       } else {
         yearFiltered = allRaw.filter((b) =>
           doesYearMatch(b.carYear, filterByYear)
