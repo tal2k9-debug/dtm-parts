@@ -13,15 +13,17 @@ interface AIResult {
 interface AIIdentificationProps {
   aiResult: AIResult | null;
   isLoading: boolean;
-  onAccept: () => void;
-  onReject: () => void;
+  onAcceptAll: () => void;
+  onAcceptMakeOnly: () => void;
+  onRejectAll: () => void;
 }
 
 export default function AIIdentification({
   aiResult,
   isLoading,
-  onAccept,
-  onReject,
+  onAcceptAll,
+  onAcceptMakeOnly,
+  onRejectAll,
 }: AIIdentificationProps) {
   if (isLoading) {
     return (
@@ -34,7 +36,7 @@ export default function AIIdentification({
   }
 
   if (!aiResult || !aiResult.identified) {
-    return null; // Will show manual selection
+    return null;
   }
 
   const confidenceText =
@@ -74,18 +76,24 @@ export default function AIIdentification({
         </p>
       </div>
 
-      <div className="flex gap-3">
+      <div className="space-y-2">
         <button
-          onClick={onAccept}
-          className="flex-1 py-4 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold text-lg transition-colors"
+          onClick={onAcceptAll}
+          className="w-full py-4 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold text-lg transition-colors"
         >
-          נכון
+          הכל נכון ✓
         </button>
         <button
-          onClick={onReject}
-          className="flex-1 py-4 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl font-bold text-lg transition-colors"
+          onClick={onAcceptMakeOnly}
+          className="w-full py-3 bg-yellow-100 hover:bg-yellow-200 text-yellow-800 rounded-xl font-bold transition-colors border-2 border-yellow-300"
         >
-          לא נכון
+          היצרן נכון, הדגם לא
+        </button>
+        <button
+          onClick={onRejectAll}
+          className="w-full py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl font-bold transition-colors"
+        >
+          הכל לא נכון
         </button>
       </div>
     </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import CameraCapture from "@/components/scan/CameraCapture";
 import AIIdentification from "@/components/scan/AIIdentification";
 import VehicleSelect from "@/components/scan/VehicleSelect";
@@ -66,8 +66,8 @@ export default function ScanPage() {
     }
   }, []);
 
-  // Accept AI identification
-  const handleAIAccept = useCallback(() => {
+  // Accept all AI identification
+  const handleAIAcceptAll = useCallback(() => {
     if (aiResult?.identified) {
       setMake(aiResult.manufacturer || "");
       setModel(aiResult.model || "");
@@ -78,9 +78,55 @@ export default function ScanPage() {
     }
   }, [aiResult]);
 
-  // Reject AI — show manual
-  const handleAIReject = useCallback(() => {
+  // Accept make only — open model selection
+  const handleAIAcceptMakeOnly = useCallback(() => {
+    if (aiResult?.identified) {
+      setMake(aiResult.manufacturer || "");
+      setModel(""); // Clear model so user picks manually
+      setYearFrom(null);
+      setYearTo(null);
+      setPosition(null);
+      setShowManualSelect(true);
+    }
+  }, [aiResult]);
+
+  // Reject all — full manual
+  const handleAIRejectAll = useCallback(() => {
     setShowManualSelect(true);
+  }, []);
+
+  // Save draft to localStorage whenever data changes
+  useEffect(() => {
+    if (photos.length > 0 || make) {
+      const draft = { photos, make, model, yearFrom, yearTo, position, condition, color, price, notes, step };
+      try {
+        localStorage.setItem("dtm-scan-draft", JSON.stringify(draft));
+      } catch { /* storage full */ }
+    }
+  }, [photos, make, model, yearFrom, yearTo, position, condition, color, price, notes, step]);
+
+  // Restore draft on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("dtm-scan-draft");
+      if (saved) {
+        const draft = JSON.parse(saved);
+        if (draft.photos?.length > 0) {
+          setPhotos(draft.photos);
+          setMake(draft.make || "");
+          setModel(draft.model || "");
+          setYearFrom(draft.yearFrom || null);
+          setYearTo(draft.yearTo || null);
+          setPosition(draft.position || null);
+          setCondition(draft.condition || "");
+          setColor(draft.color || "");
+          setPrice(draft.price || "");
+          setNotes(draft.notes || "");
+          setStep(draft.step || 0);
+          if (draft.make) setShowManualSelect(true);
+        }
+      }
+    } catch { /* ignore */ }
   }, []);
 
   // Upload to Monday
@@ -114,6 +160,7 @@ export default function ScanPage() {
 
   // Reset everything for new scan
   const handleReset = () => {
+    try { localStorage.removeItem("dtm-scan-draft"); } catch { /* ignore */ }
     setStep(0);
     setPhotos([]);
     setAiResult(null);
@@ -235,8 +282,9 @@ export default function ScanPage() {
             <AIIdentification
               aiResult={aiResult}
               isLoading={aiLoading}
-              onAccept={handleAIAccept}
-              onReject={handleAIReject}
+              onAcceptAll={handleAIAcceptAll}
+              onAcceptMakeOnly={handleAIAcceptMakeOnly}
+              onRejectAll={handleAIRejectAll}
             />
           )}
 
