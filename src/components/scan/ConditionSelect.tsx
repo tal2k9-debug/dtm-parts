@@ -30,24 +30,36 @@ export default function ConditionSelect({
 }: ConditionSelectProps) {
   return (
     <div className="space-y-6">
-      {/* Condition */}
+      {/* Condition — multi select */}
       <div>
-        <h3 className="text-lg font-bold text-gray-800 mb-3">מצב הפגוש</h3>
+        <h3 className="text-lg font-bold text-gray-800 mb-3">מצב הפגוש (ניתן לבחור כמה)</h3>
         <div className="grid grid-cols-5 gap-2">
-          {CONDITIONS.map((c) => (
-            <button
-              key={c.value}
-              onClick={() => onChange({ condition: c.value, color, price, notes })}
-              className={`py-4 rounded-xl text-center transition-all ${
-                condition === c.value
-                  ? "bg-blue-600 text-white border-2 border-blue-600 shadow-lg scale-105"
-                  : "bg-white border-2 border-gray-200 hover:border-blue-300"
-              }`}
-            >
-              <div className="text-2xl mb-1">{c.emoji}</div>
-              <div className="text-xs font-medium">{c.label}</div>
-            </button>
-          ))}
+          {CONDITIONS.map((c) => {
+            const selected = condition.split(",").map(s => s.trim()).filter(Boolean);
+            const isSelected = selected.includes(c.value);
+            return (
+              <button
+                key={c.value}
+                onClick={() => {
+                  let newSelected: string[];
+                  if (isSelected) {
+                    newSelected = selected.filter(s => s !== c.value);
+                  } else {
+                    newSelected = [...selected, c.value];
+                  }
+                  onChange({ condition: newSelected.join(", "), color, price, notes });
+                }}
+                className={`py-4 rounded-xl text-center transition-all ${
+                  isSelected
+                    ? "bg-blue-600 text-white border-2 border-blue-600 shadow-lg scale-105"
+                    : "bg-white border-2 border-gray-200 hover:border-blue-300"
+                }`}
+              >
+                <div className="text-2xl mb-1">{c.emoji}</div>
+                <div className="text-xs font-medium">{c.label}</div>
+              </button>
+            );
+          })}
         </div>
       </div>
 
